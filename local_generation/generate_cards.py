@@ -33,7 +33,7 @@ def do_point(mx, my):
     # 1 - create the folder
     folder = prod_proto.format(mx, my)
     if os.path.isdir(folder):
-        print " >> folder", folder, "already existing, forcing its deletion"
+        print(" >> folder", folder, "already existing, forcing its deletion")
         os.system('rm -r %s' % folder)
     os.system('mkdir ' + folder)
     
@@ -48,6 +48,7 @@ def do_point(mx, my):
     # to_copy = [run_card, proc_card, param_card, extramodels, customizecard]
     to_copy  = [run_card, proc_card, extramodels, customizecard]
     to_copy += [ "t_l_madspin_card.dat", "tbar_l_madspin_card.dat"]
+    to_copy += [ "pythia8_card.dat", "delphes_card.dat"]
 
     for tc in to_copy:
         os.system('cp %s/%s %s/%s_%s' % (template_flrd, tc, folder, folder, tc) )
@@ -253,18 +254,19 @@ points = [
     (2000,1800)
 ]
 
+points = []
 start_X = 500
 start_Y = 375
 
-points = [ (470,345), ]
 for X in range(start_X, 2000, 100):
   for Y in range(start_Y, 2000, 100):
     if X - Y <= 125 : continue
-    print X, Y, Y+125, "..."
+    print( X, Y, Y+125, "...")
     points += [ (X, Y) ]
 
+points = [ points[0] ]
 for p in points:
-    print '... generating', p
+    print('... generating', p)
     do_point(*p)
 
 
