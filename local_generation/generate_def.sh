@@ -2,7 +2,7 @@
 set +x
 
 SEED=1
-NEVENTS=2000
+NEVENTS=100
 process="def"
 
 mg_dir=/home/pmandrik/soft/MG5_aMC_v2_6_1/
@@ -34,6 +34,7 @@ run_mg () {
   find $card_folder -name "*_run_card.dat"     -exec cp '{}' $process/Cards/run_card.dat \;
   find $card_folder -name "*_pythia8_card.dat" -exec cp '{}' $process/Cards/pythia8_card.dat \;
   find $card_folder -name "*_delphes_card.dat" -exec cp '{}' $process/Cards/delphes_card.dat \;
+  find $card_folder -name "*_param_card.dat" -exec cp '{}' $process/Cards/param_card.dat \;
 
   sed -i 's/%SEED%/'$SEED'/g'       $process/Cards/run_card.dat
   sed -i 's/%NEVENTS%/'$NEVENTS'/g' $process/Cards/run_card.dat
@@ -72,10 +73,10 @@ run_mg () {
 for folder in $sdir/NMSSM_XYH_*; do
   echo $folder
   time run_mg $folder "t_l"
+  break
   cd $wdir
   time run_mg $folder "tbar_l"
   cd $wdir
-  break
 done
 
 

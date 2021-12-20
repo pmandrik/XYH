@@ -44,9 +44,10 @@ def do_point(mx, my):
     proc_card     = 'proc_card.dat'
     extramodels   = 'extramodels.dat'
     customizecard = 'customizecards.dat'
+    param_card    = 'param_card.dat'
     
     # to_copy = [run_card, proc_card, param_card, extramodels, customizecard]
-    to_copy  = [run_card, proc_card, extramodels, customizecard]
+    to_copy  = [run_card, proc_card, extramodels, customizecard, param_card]
     to_copy += [ "t_l_madspin_card.dat", "tbar_l_madspin_card.dat"]
     to_copy += [ "pythia8_card.dat", "delphes_card.dat"]
 
@@ -56,12 +57,15 @@ def do_point(mx, my):
     replacements = {
         'TEMPLATEMH03' : str(mx),
         'TEMPLATEMH02' : str(my),
+        '%MH03%' : str(mx), 
+        '%MH02%' : str(my),
     }
 
     # 3 - edit in place the cards
     # change_cards('%s/%s_%s' % (folder, folder, param_card), replacements)
     change_cards('%s/%s_%s' % (folder, folder, customizecard), replacements)
     change_cards('%s/%s_%s' % (folder, folder, proc_card), replacements)
+    change_cards('%s/%s_%s' % (folder, folder, param_card), replacements)
 
 
 ####################################################################################
@@ -256,14 +260,15 @@ points = [
 
 points = []
 start_X = 500
-start_Y = 375
+start_Y = 350
 
-for X in range(start_X, 2000, 100):
-  for Y in range(start_Y, 2000, 100):
-    if X - Y <= 125 : continue
-    print( X, Y, Y+125, "...")
+for X in range(start_X, 2000, 200):
+  for Y in range(start_Y, 2000, 125):
+    if X - Y <= 200 : continue
+    print( X, Y, X-Y, 125, "...")
     points += [ (X, Y) ]
 
+print( len(points) )
 points = [ points[0] ]
 for p in points:
     print('... generating', p)
