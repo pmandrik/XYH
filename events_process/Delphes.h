@@ -1,8 +1,8 @@
 //////////////////////////////////////////////////////////
 // This class has been automatically generated on
-// Thu Dec 16 00:05:22 2021 by ROOT version 6.24/06
+// Wed Dec 29 22:48:43 2021 by ROOT version 6.20/04
 // from TTree Delphes/Analysis tree
-// found on file: /home/pmandrik/work/projects/XYH/XYH/local_generation/def_fix_2/NMSSM_XYH_ttbb_MX_1100_MY_350_tbar_l/NMSSM_XYH_ttbb_MX_1100_MY_350/Events/run_01_decayed_1/tag_1_delphes_events.root
+// found on file: /home/me/work/projects/XYZ/back/pd_NMSSM_XYH_ttbb_MX_1100_MY_350.root
 //////////////////////////////////////////////////////////
 
 #ifndef Delphes_h
@@ -28,8 +28,8 @@ public :
    static constexpr Int_t kMaxGenMissingET = 1;
    static constexpr Int_t kMaxJet = 16;
    static constexpr Int_t kMaxElectron = 1;
-   static constexpr Int_t kMaxMuon = 2;
-   static constexpr Int_t kMaxFatJet = 5;
+   static constexpr Int_t kMaxMuon = 1;
+   static constexpr Int_t kMaxFatJet = 6;
    static constexpr Int_t kMaxMissingET = 1;
    static constexpr Int_t kMaxScalarHT = 1;
 
@@ -512,9 +512,9 @@ Delphes::Delphes(TTree *tree) : fChain(0)
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
    if (tree == 0) {
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("/home/pmandrik/work/projects/XYH/XYH/local_generation/def_fix_2/NMSSM_XYH_ttbb_MX_1100_MY_350_tbar_l/NMSSM_XYH_ttbb_MX_1100_MY_350/Events/run_01_decayed_1/tag_1_delphes_events.root");
+      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("/home/me/work/projects/XYZ/back/pd_NMSSM_XYH_ttbb_MX_1100_MY_350.root");
       if (!f || !f->IsOpen()) {
-         f = new TFile("/home/pmandrik/work/projects/XYH/XYH/local_generation/def_fix_2/NMSSM_XYH_ttbb_MX_1100_MY_350_tbar_l/NMSSM_XYH_ttbb_MX_1100_MY_350/Events/run_01_decayed_1/tag_1_delphes_events.root");
+         f = new TFile("/home/me/work/projects/XYZ/back/pd_NMSSM_XYH_ttbb_MX_1100_MY_350.root");
       }
       f->GetObject("Delphes",tree);
 

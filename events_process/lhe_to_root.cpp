@@ -56,9 +56,17 @@ void lhe_to_root(string path = "/home/pmandrik/work/projects/XYH/XYH/local_gener
   string olhe_name = process + "_" +  subprocess + ".lhe";
   string oroot_name = process + "_" +  subprocess + ".root";
 
-  // gzip -d file.gz
-  system( ("cp " + gz_file + " " + olhe_name + ".gz").c_str() );
-  system( ("gzip -df " + olhe_name + ".gz").c_str() );
+  if(path.size()){
+    // gzip -d file.gz
+    system( ("cp " + gz_file + " " + olhe_name + ".gz").c_str() );
+    system( ("gzip -df " + olhe_name + ".gz").c_str() );
+  } else {
+    olhe_name = process;
+    std::string base_filename = process.substr(process.find_last_of("/") + 1);
+    std::string::size_type const p(base_filename.find_last_of('.'));
+    std::string file_without_extension = base_filename.substr(0, p);
+    oroot_name = file_without_extension + ".root";
+  }
 
   std::ifstream lhe_file ( olhe_name );
 
@@ -106,6 +114,7 @@ void lhe_to_root(string path = "/home/pmandrik/work/projects/XYH/XYH/local_gener
 
     string channel = "";
     map<int,int> kinds;
+    if( reader->hepeup.NUP != 17) continue;
     for(int i = 0, NUP = reader->hepeup.NUP; i < NUP; i++){
       int IDUP = reader->hepeup.IDUP.at(i);
       int ISTUP = reader->hepeup.ISTUP.at(i);

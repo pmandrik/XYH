@@ -1,3 +1,13 @@
+path=/home/me/work/projects/XYZ/back/
+for file in $path*root; do
+
+  pname=`basename $file`
+  root -l -b -q "make_interface.cpp(\""$file"\")"
+  root -l -b -q "process_delphes.cpp(\""$file"\",\"pd_"$pname".root\")"
+    
+  break
+done
+exit
 
 path=/home/pmandrik/work/projects/XYH/XYH/local_generation/def_fix_2/
 for file in $path*; do

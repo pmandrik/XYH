@@ -15,13 +15,13 @@ void process_delphes( string file, string ofile_name ) {
 
   TH1D * hist_N_bjets = new TH1D("N_bjets", "N_bjets", 20, 0, 20);
   TH1D * hist_N_ljets = new TH1D("N_ljets", "N_ljets", 20, 0, 20);
-  TH1D * hist_N_l = new TH1D("N_l", "N_l", 20, 0, 20);
+  TH1D * hist_N_l     = new TH1D("N_l", "N_l", 20, 0, 20);
 
   TH1D * hist_qq_all  = new TH1D("qq_all", "qq_all", 100, 0, 300);
   TH1D * hist_bqq_all = new TH1D("bqq_all", "bqq_all", 100, 0, 300);
   TH1D * hist_bb_all  = new TH1D("bb_all", "bb_all", 100, 0, 300);
 
-  TH1D * hist_bb_all0  = new TH1D("bb_all0", "bb_all0", 100, 0, 300);
+  TH1D * hist_bb_all0 = new TH1D("bb_all0", "bb_all0", 100, 0, 300);
 
   TH1D * hist_nul_all   = new TH1D("nul_all", "nul_all", 100, 0, 300);
   TH1D * hist_blnu_all  = new TH1D("blnu_all", "blnu_all", 100, 0, 300);
@@ -47,7 +47,7 @@ void process_delphes( string file, string ofile_name ) {
     for(;entry < entrys;entry++){
       reader->GetEntry(entry);
       selections->Fill("Total", 1);
-
+cout << 1 << endl;
       // OBJECT SELECTIONS ==============================================
       selections->Fill("Total_X_Weight", weight);
       /*
@@ -116,7 +116,7 @@ void process_delphes( string file, string ofile_name ) {
       if( electron_candidates.size() + muon_candidates.size() < 1) continue;
       selections->Fill("At least one lepton", 1);
 
-
+cout << 2 << endl;
       // RECONSTRUCTIONS ==============================================
       vector<TLorentzVector> ljets_tlvs;
       vector<TLorentzVector> bjets_tlvs; 
@@ -133,7 +133,8 @@ void process_delphes( string file, string ofile_name ) {
       // bjets
       // cout << "===" << endl;
       vector< vector<int> > bjets_samples;
-      create_unic_samples( bjet_candidates, 4, bjets_samples, false );
+      cout << "bjet_candidates " << bjet_candidates.size() << endl;
+      create_unic_samples( bjet_candidates, 4, bjets_samples, true );
 
       vector< vector< vector<int> > > b_groups_all;
       for(int i = 0; i < bjets_samples.size(); i++){
@@ -157,15 +158,15 @@ void process_delphes( string file, string ofile_name ) {
 
       // ljets
       vector< vector<int> > ljets_samples;
-      create_unic_samples( ljet_candidates, 2, ljets_samples, false );
+      create_unic_samples( ljet_candidates, 2, ljets_samples, false ); cout << "x-1" << endl;
 
       // muon
       vector< vector<int> > muon_samples;
-      create_unic_samples( muon_candidates, 1, muon_samples, false );
+      create_unic_samples( muon_candidates, 1, muon_samples, false ); cout << "x0" << endl;
 
       // electron
       vector< vector<int> > electron_samples;
-      create_unic_samples( electron_candidates, 1, electron_samples, false );
+      create_unic_samples( electron_candidates, 1, electron_samples, false ); cout << "x1" << endl;
 
       // info groups
       // cout << b_groups_all.size() << " " << ljets_samples.size() << " " << muon_samples.size() << " " << endl;
@@ -173,18 +174,34 @@ void process_delphes( string file, string ofile_name ) {
       // vector< vector<int> > combinations = get_group_combinations( {(int)ljets_samples.size(), (int)( muon_samples.size() + electron_samples.size() ), (int)b_groups_all.size()}, false );
 
       vector< vector<int> > combinations = get_group_combinations( {1, (int)( muon_samples.size() + electron_samples.size() ), (int)b_groups_all.size()}, false );
+      
+      cout << 3 << endl;
+
 
       // iterate over event reconstruction candidates
       for( int i = 0; i < combinations.size(); i++ ){
+        cout << "combinations " << i << endl;
+        cout << combinations[i].size() << endl;
+        
         int ljets_samples_index = combinations[i][0];
         int lepton_samples_index  = combinations[i][1];
         int b_groups_all_index  = combinations[i][2];
+        
+        cout << ljets_samples_index << " " << lepton_samples_index << " " << b_groups_all_index << endl;
 
         vector<int> ljets_sample = ljets_samples[ ljets_samples_index ];
         vector< vector<int> > b_groups = b_groups_all[ b_groups_all_index ];
+        
+        cout << "b_groups " << b_groups.size() << endl;
+        
         vector<int> b_hs  = b_groups[0];
         vector<int> b_tls  = b_groups[1];
         vector<int> b_tqs  = b_groups[2];
+        
+        cout << b_hs.size() << " " << b_tls.size() << " " << b_tqs.size() << endl;
+        
+        cout << b_hs[0] << " " << b_hs[1] << " " << b_tls[0] << " " << b_tqs[0] << " " << ljets_sample[0] << " " << ljets_sample[1] << endl;
+        
 
         TLorentzVector b1_h = make_jet(reader, b_hs[0]);
         TLorentzVector b2_h = make_jet(reader, b_hs[1]);
