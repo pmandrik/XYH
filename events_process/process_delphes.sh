@@ -1,11 +1,30 @@
 path=/home/me/work/projects/XYZ/back/
-for file in $path*root; do
+path=/home/pmandrik/work/projects/XYZ/back/
 
-  pname=`basename $file`
+path=/home/pmandrik/work/projects/XYH/SAMPLES/signal/
+for folder in $path/NMSSM_*; do
+#for folder in $path/NMSSM_XYH_ttbb_MX_650_MY_375; do
+  pname=`basename $folder` # run_01_decayed_1
+  file=$folder/$pname"_t_l"/run_01_decayed_1/tag_1_delphes_events.root
+  file_lhe=$folder/$pname"_t_l"/run_01_decayed_1/unweighted_events.lhe
+  file2=$folder/$pname"_tbar_l"/run_01_decayed_1/tag_1_delphes_events.root
+  file_lhe2=$folder/$pname"_tbar_l"/run_01_decayed_1/unweighted_events.lhe
+  echo $file
+
+  oname0="lhe_"$pname"_t_l.root"
+  oname1="lhe_"$pname"_tbar_l.root"
+
+  if [ ! -f "$oname0" ]; then
+    root -l -b -q 'lhe_to_root.cpp("'$file_lhe'","'$pname'","t_l", "'$oname0'")'
+  fi
+
+  if [ ! -f "$oname1" ]; then
+    root -l -b -q 'lhe_to_root.cpp("'$file_lhe2'","'$pname'","tbar_l", "'$oname1'")'
+  fi
+
   root -l -b -q "make_interface.cpp(\""$file"\")"
-  root -l -b -q "process_delphes.cpp(\""$file"\",\"pd_"$pname".root\")"
-    
-  break
+  #root -l -b -q "process_delphes.cpp(\""$file"\",\"pd_"$pname".root\", \"$file_lhe\")"
+  root -l -b -q "process_delphes.cpp(\""$file"\",\""$file2"\",\"pd_"$pname".root\", \"$oname0\", \"$oname1\")"
 done
 exit
 

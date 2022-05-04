@@ -2,44 +2,6 @@
 #include "Delphes.C"
 #include "Delphes_help_func.C"
 
-struct ftlv;
-vector<ftlv*> ftlvs;
-
-struct ftlv {
-  ftlv(string name, TTree * tree){
-    vector<float*> brunches = {&pt, &pz, &eta, &phi, &m};
-    vector<string> names = {"_pt", "_pz", "_eta", "_phi", "_m"};
-    
-    for(int i = 0; i < brunches.size(); i ++){
-      tree->Branch( (name + names.at(i)).c_str(), brunches.at(i));
-    }
-
-    ftlvs.push_back( this );
-  };
-
-  void set(float x, float y, float z, float z4){
-    tlv.SetPxPyPzE( x, y, z, z4 );
-    set( tlv );
-  }
-
-  void set(TLorentzVector v){
-    tlv = v;
-    pt  = v.Pt();
-    pz  = v.Pz();
-    eta = v.Eta();
-    phi = v.Phi();
-    m   = v.M();
-  }
-
-  void reset(){ 
-    tlv = TLorentzVector();
-    pt = 0, pz = 0, eta = 0, phi = 0, m = 0;
-  }
-  
-  TLorentzVector tlv;
-  float pt = 0, pz = 0, eta = 0, phi = 0, m = 0;
-};
-
 float min_ftlv_dR_v(ftlv & p, vector<ftlv> others){
   double dr = 999999 ;
   for(auto other : others){
@@ -48,14 +10,16 @@ float min_ftlv_dR_v(ftlv & p, vector<ftlv> others){
   return dr ;
 }
 
-void lhe_to_root(string path = "/home/pmandrik/work/projects/XYH/XYH/local_generation/def_fix/", string process = "NMSSM_XYH_ttbb_MX_1700_MY_475", string subprocess = "tbar_l") {
+void lhe_to_root(string path = "/home/pmandrik/work/projects/XYH/XYH/local_generation/def_fix/", string process = "NMSSM_XYH_ttbb_MX_1700_MY_475", string subprocess = "tbar_l", string oname = "") {
   string postfix = "/Events/run_01_decayed_1/";
   string lhe_name = "unweighted_events.lhe";
 
   string gz_file = path + process + "_" + subprocess + "/" + process + postfix + lhe_name + ".gz";
   string olhe_name = process + "_" +  subprocess + ".lhe";
-  string oroot_name = process + "_" +  subprocess + ".root";
+  olhe_name = path;
+  string oroot_name = oname;
 
+  /*
   if(path.size()){
     // gzip -d file.gz
     system( ("cp " + gz_file + " " + olhe_name + ".gz").c_str() );
@@ -67,6 +31,7 @@ void lhe_to_root(string path = "/home/pmandrik/work/projects/XYH/XYH/local_gener
     std::string file_without_extension = base_filename.substr(0, p);
     oroot_name = file_without_extension + ".root";
   }
+  */
 
   std::ifstream lhe_file ( olhe_name );
 
@@ -75,8 +40,9 @@ void lhe_to_root(string path = "/home/pmandrik/work/projects/XYH/XYH/local_gener
   TFile * ofile = new TFile(oroot_name.c_str(), "RECREATE");
   TTree * tree = new TTree("ttree", "ttree");
 
+  ftlv_write = true;
   ftlv H("H", tree), Y("Y", tree), X("X", tree), Y_reco("Y_reco", tree), X_reco("X_reco", tree);
-  ftlv t("t", tree), tbar("tbar", tree),  t_l_reco("t_l_reco", tree), b_H("b_H", tree), bbar_H("bbar_H", tree), v("v", tree), l("l", tree), q("q", tree), qbar("qbar", tree);
+  ftlv t("t", tree), tbar("tbar", tree),  t_l_reco("t_l_reco", tree), t_q_reco("t_q_reco", tree), b_H("b_H", tree), bbar_H("bbar_H", tree), v("v", tree), l("l", tree), q("q", tree), qbar("qbar", tree);
   ftlv W("W", tree), Wbar("Wbar", tree), W_l_reco("W_l_reco", tree), b_t("b_t", tree), bbar_t("bbar_t", tree);
 
   /*
@@ -97,8 +63,22 @@ void lhe_to_root(string path = "/home/pmandrik/work/projects/XYH/XYH/local_gener
   tree->Branch( "qbar_id",   &qbar_id);
   tree->Branch( "dR_l_nearest",   &dR_l_nearest);
 
+  int veto = 0;
+  tree->Branch( "veto", &veto );
+
+  int channel = 0;
+  tree->Branch( "channel", &channel );
+
   int n_events = 0;
   while( reader->readEvent() ){
+    veto = 0;
+    if( reader->hepeup.NUP != 17){
+      veto = 1;
+      tree->Fill();
+      n_events++;
+      continue; 
+    }
+
     qbar_id = -1;
     q_id    = -1;
     l_id    = -1;
@@ -114,7 +94,6 @@ void lhe_to_root(string path = "/home/pmandrik/work/projects/XYH/XYH/local_gener
 
     string channel = "";
     map<int,int> kinds;
-    if( reader->hepeup.NUP != 17) continue;
     for(int i = 0, NUP = reader->hepeup.NUP; i < NUP; i++){
       int IDUP = reader->hepeup.IDUP.at(i);
       int ISTUP = reader->hepeup.ISTUP.at(i);
@@ -178,13 +157,19 @@ void lhe_to_root(string path = "/home/pmandrik/work/projects/XYH/XYH/local_gener
 
     dR_l_nearest = min_ftlv_dR_v( l, { b_t, bbar_t, b_H, bbar_H, q, qbar } );
 
-    TLorentzVector t_reco_tlv, v_reco_tlv, W_reco_tlv;
+    TLorentzVector t_reco_tlv, t_q_reco_tlv,  v_reco_tlv, W_reco_tlv;
     if(subprocess == "tbar_l") reconstruct_t_from_bW( l.tlv + bbar_t.tlv, v.tlv, v_reco_tlv, t_reco_tlv );
     else                       reconstruct_t_from_bW( l.tlv + b_t.tlv,    v.tlv, v_reco_tlv, t_reco_tlv );
     W_reco_tlv = v_reco_tlv + l.tlv;
 
+    if(subprocess == "tbar_l") t_q_reco_tlv = q.tlv + qbar.tlv + b_t.tlv;
+    else                       t_q_reco_tlv = q.tlv + qbar.tlv + bbar_t.tlv;
+
+    channel = ( subprocess == "tbar_l" );
+
     W_l_reco.set( W_reco_tlv );
     t_l_reco.set( t_reco_tlv );
+    t_q_reco.set( t_q_reco_tlv );
     if(subprocess == "tbar_l") Y_reco.set( t_reco_tlv + t.tlv );
     else                       Y_reco.set( t_reco_tlv + tbar.tlv );
     X_reco.set( Y_reco.tlv + H.tlv );

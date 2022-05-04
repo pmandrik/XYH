@@ -1,8 +1,8 @@
 //////////////////////////////////////////////////////////
 // This class has been automatically generated on
-// Wed Dec 29 22:48:43 2021 by ROOT version 6.20/04
+// Wed May  4 20:00:52 2022 by ROOT version 6.26/02
 // from TTree Delphes/Analysis tree
-// found on file: /home/me/work/projects/XYZ/back/pd_NMSSM_XYH_ttbb_MX_1100_MY_350.root
+// found on file: /home/pmandrik/work/projects/XYH/SAMPLES/signal//NMSSM_XYH_ttbb_MX_650_MY_375/NMSSM_XYH_ttbb_MX_650_MY_375_t_l/run_01_decayed_1/tag_1_delphes_events.root
 //////////////////////////////////////////////////////////
 
 #ifndef Delphes_h
@@ -24,11 +24,10 @@ public :
 // Fixed size dimensions of array or collections stored in the TTree if any.
    static constexpr Int_t kMaxEvent = 1;
    static constexpr Int_t kMaxWeight = 2;
-   static constexpr Int_t kMaxGenJet = 16;
-   static constexpr Int_t kMaxGenMissingET = 1;
+   static constexpr Int_t kMaxGenJet = 17;
    static constexpr Int_t kMaxJet = 16;
-   static constexpr Int_t kMaxElectron = 1;
-   static constexpr Int_t kMaxMuon = 1;
+   static constexpr Int_t kMaxElectron = 2;
+   static constexpr Int_t kMaxMuon = 3;
    static constexpr Int_t kMaxFatJet = 6;
    static constexpr Int_t kMaxMissingET = 1;
    static constexpr Int_t kMaxScalarHT = 1;
@@ -108,13 +107,6 @@ public :
    TRefArray       GenJet_Particles[kMaxGenJet];
    TLorentzVector  GenJet_Area[kMaxGenJet];
    Int_t           GenJet_size;
-   Int_t           GenMissingET_;
-   UInt_t          GenMissingET_fUniqueID[kMaxGenMissingET];   //[GenMissingET_]
-   UInt_t          GenMissingET_fBits[kMaxGenMissingET];   //[GenMissingET_]
-   Float_t         GenMissingET_MET[kMaxGenMissingET];   //[GenMissingET_]
-   Float_t         GenMissingET_Eta[kMaxGenMissingET];   //[GenMissingET_]
-   Float_t         GenMissingET_Phi[kMaxGenMissingET];   //[GenMissingET_]
-   Int_t           GenMissingET_size;
    Int_t           Jet_;
    UInt_t          Jet_fUniqueID[kMaxJet];   //[Jet_]
    UInt_t          Jet_fBits[kMaxJet];   //[Jet_]
@@ -338,13 +330,6 @@ public :
    TBranch        *b_GenJet_Particles;   //!
    TBranch        *b_GenJet_Area;   //!
    TBranch        *b_GenJet_size;   //!
-   TBranch        *b_GenMissingET_;   //!
-   TBranch        *b_GenMissingET_fUniqueID;   //!
-   TBranch        *b_GenMissingET_fBits;   //!
-   TBranch        *b_GenMissingET_MET;   //!
-   TBranch        *b_GenMissingET_Eta;   //!
-   TBranch        *b_GenMissingET_Phi;   //!
-   TBranch        *b_GenMissingET_size;   //!
    TBranch        *b_Jet_;   //!
    TBranch        *b_Jet_fUniqueID;   //!
    TBranch        *b_Jet_fBits;   //!
@@ -512,9 +497,9 @@ Delphes::Delphes(TTree *tree) : fChain(0)
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
    if (tree == 0) {
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("/home/me/work/projects/XYZ/back/pd_NMSSM_XYH_ttbb_MX_1100_MY_350.root");
+      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("/home/pmandrik/work/projects/XYH/SAMPLES/signal//NMSSM_XYH_ttbb_MX_650_MY_375/NMSSM_XYH_ttbb_MX_650_MY_375_t_l/run_01_decayed_1/tag_1_delphes_events.root");
       if (!f || !f->IsOpen()) {
-         f = new TFile("/home/me/work/projects/XYZ/back/pd_NMSSM_XYH_ttbb_MX_1100_MY_350.root");
+         f = new TFile("/home/pmandrik/work/projects/XYH/SAMPLES/signal//NMSSM_XYH_ttbb_MX_650_MY_375/NMSSM_XYH_ttbb_MX_650_MY_375_t_l/run_01_decayed_1/tag_1_delphes_events.root");
       }
       f->GetObject("Delphes",tree);
 
@@ -637,13 +622,6 @@ void Delphes::Init(TTree *tree)
    fChain->SetBranchAddress("GenJet.Particles", GenJet_Particles, &b_GenJet_Particles);
    fChain->SetBranchAddress("GenJet.Area", GenJet_Area, &b_GenJet_Area);
    fChain->SetBranchAddress("GenJet_size", &GenJet_size, &b_GenJet_size);
-   fChain->SetBranchAddress("GenMissingET", &GenMissingET_, &b_GenMissingET_);
-   fChain->SetBranchAddress("GenMissingET.fUniqueID", GenMissingET_fUniqueID, &b_GenMissingET_fUniqueID);
-   fChain->SetBranchAddress("GenMissingET.fBits", GenMissingET_fBits, &b_GenMissingET_fBits);
-   fChain->SetBranchAddress("GenMissingET.MET", GenMissingET_MET, &b_GenMissingET_MET);
-   fChain->SetBranchAddress("GenMissingET.Eta", GenMissingET_Eta, &b_GenMissingET_Eta);
-   fChain->SetBranchAddress("GenMissingET.Phi", GenMissingET_Phi, &b_GenMissingET_Phi);
-   fChain->SetBranchAddress("GenMissingET_size", &GenMissingET_size, &b_GenMissingET_size);
    fChain->SetBranchAddress("Jet", &Jet_, &b_Jet_);
    fChain->SetBranchAddress("Jet.fUniqueID", Jet_fUniqueID, &b_Jet_fUniqueID);
    fChain->SetBranchAddress("Jet.fBits", Jet_fBits, &b_Jet_fBits);

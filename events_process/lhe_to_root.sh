@@ -1,4 +1,5 @@
 path=/home/me/work/projects/XYZ/back/
+path=/home/pmandrik/work/projects/XYZ/back/
 for file in $path*lhe; do
 
   pname=`basename $file`
@@ -12,7 +13,6 @@ for file in $path*lhe; do
     echo $path $pname $sname
     root -l -b -q 'lhe_to_root.cpp("''","'$file'","'$sname'")'
   fi
-  break
 done
 exit
 
