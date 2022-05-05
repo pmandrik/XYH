@@ -70,18 +70,18 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
   TH1D * hist_N_ljets = new TH1D("N_ljets", "N_ljets", 20, 0, 10);
   TH1D * hist_N_l     = new TH1D("N_l", "N_l", 20, 0, 4);
 
-  TH1D * hist_qq_all  = new TH1D("qq_all",  "qq_all", 100, 0, 500);
-  TH1D * hist_bqq_all = new TH1D("bqq_all", "bqq_all", 100, 0, 500);
-  TH1D * hist_bb_all  = new TH1D("bb_all",  "bb_all", 100, 0, 500);
+  TH1D * hist_qq_all  = new TH1D("qq_all",  "qq_all", 100, 0, 800);
+  TH1D * hist_bqq_all = new TH1D("bqq_all", "bqq_all", 100, 0, 1000);
+  TH1D * hist_bb_all  = new TH1D("bb_all",  "bb_all", 100, 0, 800);
 
-  TH1D * hist_bb_all0  = new TH1D("bb_all0", "bb_all0", 100, 0, 500);
-  TH1D * hist_qq_all0  = new TH1D("qq_all0", "qq_all0", 100, 0, 500);
-  TH1D * hist_qqb_all0 = new TH1D("qqb_all0", "qqb_all0", 100, 0, 500);
+  TH1D * hist_bb_all0  = new TH1D("bb_all0", "bb_all0", 100, 0, 800);
+  TH1D * hist_qq_all0  = new TH1D("qq_all0", "qq_all0", 100, 0, 800);
+  TH1D * hist_qqb_all0 = new TH1D("qqb_all0", "qqb_all0", 100, 0, 1000);
 
   TH1D * hist_nul_all   = new TH1D("nul_all", "nul_all", 100, 0, 500);
   TH1D * hist_blnu_all  = new TH1D("blnu_all", "blnu_all", 100, 0, 1000);
-  TH1D * hist_tt_all    = new TH1D("tt_all", "tt_all", 200, 0, 2000);
-  TH1D * hist_HY_all    = new TH1D("HY_all", "HY_all", 200, 0, 2000);
+  TH1D * hist_tt_all    = new TH1D("tt_all", "tt_all", 200, 0, 3000);
+  TH1D * hist_HY_all    = new TH1D("HY_all", "HY_all", 200, 0, 3000);
 
   // lhe vs reco
   TH1D * hist_Hb_dR     = new TH1D("lhe_Hb_dR_all", "lhe_Hb_dR_all", 100, 0, 10);

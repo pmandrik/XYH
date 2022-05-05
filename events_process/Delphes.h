@@ -1,8 +1,8 @@
 //////////////////////////////////////////////////////////
 // This class has been automatically generated on
-// Wed May  4 20:00:52 2022 by ROOT version 6.26/02
+// Thu May  5 13:05:25 2022 by ROOT version 6.26/02
 // from TTree Delphes/Analysis tree
-// found on file: /home/pmandrik/work/projects/XYH/SAMPLES/signal//NMSSM_XYH_ttbb_MX_650_MY_375/NMSSM_XYH_ttbb_MX_650_MY_375_t_l/run_01_decayed_1/tag_1_delphes_events.root
+// found on file: /home/pmandrik/work/projects/XYH/SAMPLES/signal//NMSSM_XYH_ttbb_MX_900_MY_600/NMSSM_XYH_ttbb_MX_900_MY_600_t_l/run_01_decayed_1/tag_1_delphes_events.root
 //////////////////////////////////////////////////////////
 
 #ifndef Delphes_h
@@ -26,8 +26,8 @@ public :
    static constexpr Int_t kMaxWeight = 2;
    static constexpr Int_t kMaxGenJet = 17;
    static constexpr Int_t kMaxJet = 16;
-   static constexpr Int_t kMaxElectron = 2;
-   static constexpr Int_t kMaxMuon = 3;
+   static constexpr Int_t kMaxElectron = 3;
+   static constexpr Int_t kMaxMuon = 2;
    static constexpr Int_t kMaxFatJet = 6;
    static constexpr Int_t kMaxMissingET = 1;
    static constexpr Int_t kMaxScalarHT = 1;
@@ -497,9 +497,9 @@ Delphes::Delphes(TTree *tree) : fChain(0)
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
    if (tree == 0) {
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("/home/pmandrik/work/projects/XYH/SAMPLES/signal//NMSSM_XYH_ttbb_MX_650_MY_375/NMSSM_XYH_ttbb_MX_650_MY_375_t_l/run_01_decayed_1/tag_1_delphes_events.root");
+      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("/home/pmandrik/work/projects/XYH/SAMPLES/signal//NMSSM_XYH_ttbb_MX_900_MY_600/NMSSM_XYH_ttbb_MX_900_MY_600_t_l/run_01_decayed_1/tag_1_delphes_events.root");
       if (!f || !f->IsOpen()) {
-         f = new TFile("/home/pmandrik/work/projects/XYH/SAMPLES/signal//NMSSM_XYH_ttbb_MX_650_MY_375/NMSSM_XYH_ttbb_MX_650_MY_375_t_l/run_01_decayed_1/tag_1_delphes_events.root");
+         f = new TFile("/home/pmandrik/work/projects/XYH/SAMPLES/signal//NMSSM_XYH_ttbb_MX_900_MY_600/NMSSM_XYH_ttbb_MX_900_MY_600_t_l/run_01_decayed_1/tag_1_delphes_events.root");
       }
       f->GetObject("Delphes",tree);
 

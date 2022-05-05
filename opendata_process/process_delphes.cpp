@@ -73,18 +73,18 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "" 
   TH1D * hist_N_ljets = new TH1D("N_ljets", "N_ljets", 20, 0, 10);
   TH1D * hist_N_l     = new TH1D("N_l", "N_l", 20, 0, 4);
 
-  TH1D * hist_qq_all  = new TH1D("qq_all",  "qq_all", 100, 0, 500);
-  TH1D * hist_bqq_all = new TH1D("bqq_all", "bqq_all", 100, 0, 500);
-  TH1D * hist_bb_all  = new TH1D("bb_all",  "bb_all", 100, 0, 500);
+  TH1D * hist_qq_all  = new TH1D("qq_all",  "qq_all", 100, 0, 800);
+  TH1D * hist_bqq_all = new TH1D("bqq_all", "bqq_all", 100, 0, 1000);
+  TH1D * hist_bb_all  = new TH1D("bb_all",  "bb_all", 100, 0, 800);
 
-  TH1D * hist_bb_all0  = new TH1D("bb_all0", "bb_all0", 100, 0, 500);
-  TH1D * hist_qq_all0  = new TH1D("qq_all0", "qq_all0", 100, 0, 500);
-  TH1D * hist_qqb_all0 = new TH1D("qqb_all0", "qqb_all0", 100, 0, 500);
+  TH1D * hist_bb_all0  = new TH1D("bb_all0", "bb_all0", 100, 0, 800);
+  TH1D * hist_qq_all0  = new TH1D("qq_all0", "qq_all0", 100, 0, 800);
+  TH1D * hist_qqb_all0 = new TH1D("qqb_all0", "qqb_all0", 100, 0, 1000);
 
   TH1D * hist_nul_all   = new TH1D("nul_all", "nul_all", 100, 0, 500);
   TH1D * hist_blnu_all  = new TH1D("blnu_all", "blnu_all", 100, 0, 1000);
-  TH1D * hist_tt_all    = new TH1D("tt_all", "tt_all", 200, 0, 2000);
-  TH1D * hist_HY_all    = new TH1D("HY_all", "HY_all", 200, 0, 2000);
+  TH1D * hist_tt_all    = new TH1D("tt_all", "tt_all", 200, 0, 3000);
+  TH1D * hist_HY_all    = new TH1D("HY_all", "HY_all", 200, 0, 3000);
 
   // lhe vs reco
   TH1D * hist_Hb_dR     = new TH1D("lhe_Hb_dR_all", "lhe_Hb_dR_all", 100, 0, 10);
@@ -153,7 +153,8 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "" 
     Long64_t entrys = tree1->GetEntries();
     Long64_t entry = 0;
     for(;entry < entrys;entry++){
-      if( entry > 10000 ) break;
+      if( not (entry % 10000) )
+        cout << entry << "/" << entrys << endl;
 
       file->cd();
       reader1->GetEntry(entry);
@@ -315,7 +316,7 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "" 
       vector< vector<int> > electron_samples;
       create_unic_samples( electron_candidates, 1, electron_samples, false );
 
-      cout << "TADA " << muon_candidates.size() << " " << electron_candidates.size() << " " << muon_samples.size() << " " << electron_samples.size()<< endl;
+      // cout << "TADA " << muon_candidates.size() << " " << electron_candidates.size() << " " << muon_samples.size() << " " << electron_samples.size()<< endl;
 
       // info groups
       //cout << b_groups_all.size() << " " << ljets_samples.size() << " " << muon_samples.size() << " " << endl;
@@ -327,8 +328,6 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "" 
       //vector< vector<int> > combinations = get_group_combinations( {1, (int)( muon_samples.size() + electron_samples.size() ), (int)b_groups_all.size()}, false );
       vector< vector<int> > combinations = get_group_combinations( {(int)ljets_samples.size(), 1, (int)b_groups_all.size()}, false );
       // cout << "=== " << endl;
-
-cout << 1 << endl;
 
       // iterate over event reconstruction candidates
       for( int i = 0; i < combinations.size(); i++ ){
@@ -382,7 +381,7 @@ cout << 1 << endl;
         // t -> b_tl l nu
         TLorentzVector l;
 
-        cout << muon_samples.size() << "!!!" << " " << reader2->numbermuon << endl;
+        // cout << muon_samples.size() << "!!!" << " " << reader2->numbermuon << endl;
 
         if( muon_candidates.size() ) l = make_muon(reader2, 0);
         else                         l = make_electron(reader1, 0);
