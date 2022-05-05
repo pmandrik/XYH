@@ -297,15 +297,6 @@ vector< vector<int> > get_group_combinations( vector<int> group_sizes, bool prin
 
 
 
-TLorentzVector make_tlv(Delphes * reader, int & index, string & type){
-  TLorentzVector vec;
-  if(type == "jet")      return make_jet(reader, index);
-//if(type == "photon")   return make_photon(reader, index);
-  if(type == "muon")     return make_muon(reader, index);
-  if(type == "electron") return make_electron(reader, index);
-  cout << "Unknow type " << type << endl;
-  return vec;
-} 
 
 
 // ================================================================== ================================================================== ==================================================================
@@ -403,8 +394,6 @@ vector< pair<int,int> > get_XY_mass(string type){
   }
   return XY_mass;
 }
-
-
 
 
 

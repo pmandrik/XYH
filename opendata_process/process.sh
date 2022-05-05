@@ -1,5 +1,5 @@
 
-file=/home/pmandrik/work/projects/XYH/process_ttbar/ttbar.root
+file=/home/pmandrik/work/projects/XYH/SAMPLES/ttbar.root
 
 root -l -b -q "process_delphes.cpp(\""$file"\",\"pd_file.root\")"
 
