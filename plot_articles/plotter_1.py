@@ -42,7 +42,7 @@ for point, file in zip(points, files):
     answer[ str(point) + "_" + hist_name ] = array
 
 ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### 
-def make_hists_plot( h_pt_data, label, outname, bins = np.linspace(-5, 5, 30), markers=None, cols=None, labelsx=None, labely=None, range_y=None):
+def make_hists_plot( h_pt_data, label, outname, bins = np.linspace(-5, 5, 30), markers=None, cols=None, labelsx=None, labely=None, range_y=None, limitx0 = 0, limitx=None, dense = False):
   fig, ax = plt.subplots()
   fig.set_figheight(7)
   ax.set_title('')
@@ -53,14 +53,17 @@ def make_hists_plot( h_pt_data, label, outname, bins = np.linspace(-5, 5, 30), m
   for point, point_data, mark, col in zip(points, h_pt_data, markers, cols) :
     weights = [ data[1] for data in point_data ]
     xdata   = [ data[0] for data in point_data ]
+    max_weight = max(weights)
+    if not dense : weights = [ w / max_weight for w in weights ]
     # print(xdata, weights, bins)
     if col:
-      n,bins,patches=plt.hist( xdata, bins, weights=weights, alpha=1.0, label=str(point), color=col, histtype='step', linewidth=2)
-      plt.scatter(bins[:-1]+ 0.5*(bins[1:] - bins[:-1]), n, marker=mark, c=col, s=40, alpha=1)
+      n,bins,patches=plt.hist( xdata, bins, weights=weights, alpha=1.0, label=str(point), color=col, histtype='step', linewidth=2, density=dense)
+      # plt.scatter(bins[:-1]+ 0.5*(bins[1:] - bins[:-1]), n, marker=mark, c=col, s=40, alpha=1)
     else :
       n,bins,patches=plt.hist( xdata, bins, weights=weights, alpha=1.0, label=str(point), histtype='step', linewidth=2)
-  ax.set( xlabel=label, ylabel=r'Fraction of events')
-  ax.xaxis.set_major_locator(plt.MaxNLocator(15))
+  if not dense : ax.set( xlabel=label, ylabel=r'Events yield')
+  else         : ax.set( xlabel=label, ylabel=r'Fraction of selected events')
+  ax.xaxis.set_major_locator(plt.MaxNLocator(10))
 
   if labelsx:
     xdata   = [ data[0] for data in h_pt_data[0] ]
@@ -73,6 +76,8 @@ def make_hists_plot( h_pt_data, label, outname, bins = np.linspace(-5, 5, 30), m
     plt.yticks(np.arange(0, 1.05, step=0.05))
 
   #ax.grid(True, linestyle='dashed')
+  plt.xlim([bins[0], bins[-1]])
+  if limitx : plt.xlim([limitx0, limitx])
   plt.grid(axis='y', color='0.90', linestyle='dashed')
   plt.legend(title=r'$(M_X, M_Y)$, [GeV]')
   plt.savefig( path_out + "/" + outname + '.png', bbox_inches='tight')
@@ -158,21 +163,60 @@ if False :
 
 
 if True :
-    points = [(650, 375), (900, 600), (1300, 975), (1700, 475), (1900, 1600), r"$t\bar{t}$ background"]
-    for hist_name, axis_label in zip(["bb_all0", "qq_all0", "qqb_all0", "nul_all", "blnu_all", "tt_all", "HY_all"], ["bb_all0", "qq_all0", "qqb_all0", "nul_all", "blnu_all", "tt_all", "HY_all"]):
+    # points = [(650, 375), (900, 600), (1300, 975), (1700, 475), (1900, 1600), r"$t\bar{t}$ background"]
+    #for hist_name, axis_label in zip(["bb_all0", "qq_all0", "qqb_all0", "nul_all", "blnu_all", "tt_all", "HY_all"], ["bb_all0", "qq_all0", "qqb_all0", "nul_all", "blnu_all", "tt_all", "HY_all"]):
+    reqs = [ 
+      ["tt_all",   r"$M(t\bar{t})$ GeV", 2000],
+      ["HY_all",   r"$M(HY)$ GeV", 2500],
+    ]
+    for hist_name, axis_label, limitx in reqs:
       outname   = hist_name
       data_points = []
       for point in points:
         data_point = answer[ str(point) + "_" + hist_name ]
         data_points += [ data_point ]
-        #print( data_point )
+        width   = data_points[0][1][0] - data_points[0][0][0]
       
       width   = data_points[0][1][0] - data_points[0][0][0]
       start_x = data_points[0][0][0] - width/2
       end_x   = data_points[0][-1][0] + width/2
+      bins = [ 2 *width * i for i in range( int((end_x-start_x) / width) + 1 ) ]
+
+      # print(start_x, end_x, len(data_points[0]),width,(end_x-start_x)/width)
+      # print( bins )
+      # print( data_point )
 
       unfilled_markers = [m for m, func in Line2D.markers.items() if func != 'nothing' and m not in Line2D.filled_markers]
-      make_hists_plot( data_points, axis_label, outname, bins = np.linspace(start_x, int(end_x), len(data_points[0])), cols=colors_t2 )
+      make_hists_plot( data_points, axis_label, outname, bins = bins, cols=colors_t2, limitx=limitx, dense=True )
+
+    points = [(650, 375),(1300, 975), (1700, 475), (1900, 1600), r"$t\bar{t}$ background"]
+    reqs = [ 
+      ["qq_all0",  r"$M(q\bar{q})$ GeV", 0,600],
+      ["qqb_all0", r"$M(q\bar{q}b)$ GeV", 0,1000],
+      ["nul_all",  r"$M(\nu l)$ GeV", 60,200],
+      ["blnu_all", r"$M(\nu l b)$ GeV", 60,600],
+      ["bb_all0",  r"$M(b\bar{b})$ GeV", 0,600],
+    ]
+    for hist_name, axis_label, limitx0, limitx in reqs:
+      outname   = hist_name
+      data_points = []
+      for point in points:
+        data_point = answer[ str(point) + "_" + hist_name ]
+        data_points += [ data_point ]
+
+        width   = data_points[0][1][0] - data_points[0][0][0]
+      
+      width   = data_points[0][1][0] - data_points[0][0][0]
+      start_x = data_points[0][0][0] - width/2
+      end_x   = data_points[0][-1][0] + width/2
+      bins = [ width * i for i in range( int((end_x-start_x) / width) + 1 ) ]
+
+      # print(start_x, end_x, len(data_points[0]),width,(end_x-start_x)/width)
+      # print( bins )
+      # print( data_point )
+
+      unfilled_markers = [m for m, func in Line2D.markers.items() if func != 'nothing' and m not in Line2D.filled_markers]
+      make_hists_plot( data_points, axis_label, outname, bins = bins, cols=colors_t2, limitx0=limitx0, limitx=limitx )
 
 
 

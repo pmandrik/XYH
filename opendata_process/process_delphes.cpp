@@ -58,6 +58,29 @@ map<int,int> match_multiple( vector<TLorentzVector> v1, vector<TLorentzVector> v
   //return match;
 };
 
+double calc_metric(TLorentzVector Wl, TLorentzVector tl, TLorentzVector Wq, TLorentzVector tq, TLorentzVector H){
+  double val  = TMath::Power((Wl.M() - 80)/80, 2) + TMath::Power((Wq.M() - 80)/80, 2);
+         val += TMath::Power((tl.M() - 174)/174, 2) + TMath::Power((tl.M() - 174)/174, 2);
+         val += TMath::Power((H.M() - 125)/125, 2);
+  return val; 
+};
+
+struct full_reco_events{
+  double metric;
+  TLorentzVector Wl, tl, Wq, tq, H, Y, X;
+
+  void set(double metric_, TLorentzVector Wl_, TLorentzVector tl_, TLorentzVector Wq_, TLorentzVector tq_, TLorentzVector H_, TLorentzVector Y_, TLorentzVector X_){
+    metric = metric_;
+    Wl = Wl_;
+    tl = tl_;
+    Wq = Wq_;
+    tq = tq_;
+    H  = H_ ;
+    Y = Y_;
+    X = X_;
+  }
+};
+
 void process_delphes( string file, string ofile_name, string file_from_lhe = "" ) {
   vector<string> delphes_files = { file };
 
@@ -123,6 +146,14 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "" 
   TH1D * hist_Y_match = new TH1D("hist_Y_match", "hist_Y_match", 200, 300, 2000);
   TH1D * hist_X_match = new TH1D("hist_X_match", "hist_X_match", 200, 300, 2000);
 
+  TH1D * hist_nul_BM       = new TH1D("nul_all_BM", "nul_all_BM", 100, 0, 500);
+  TH1D * hist_blnu_BM      = new TH1D("blnu_all_BM", "blnu_all_BM", 100, 0, 1000);
+  TH1D * hist_tt_BM        = new TH1D("tt_all_BM", "tt_all_BM", 200, 0, 3000);
+  TH1D * hist_HY_BM        = new TH1D("HY_all_BM", "HY_all_BM", 200, 0, 3000);
+  TH1D * hist_bb_BMl       = new TH1D("bb_al_BMl", "bb_all_BM", 100, 0, 800);
+  TH1D * hist_bqq_BM       = new TH1D("bqq_all_BM", "bqq_all_BM", 100, 0, 1000);
+  TH1D * hist_qq_BM        = new TH1D("qq_all_BM", "qq_all_BM", 100, 0, 800);
+
   Long64_t total_entrys = 0;
   float weight = 1;
   float total_weight_sum = 1;
@@ -155,6 +186,8 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "" 
     for(;entry < entrys;entry++){
       if( not (entry % 10000) )
         cout << entry << "/" << entrys << endl;
+
+      // if( entry > 10000 ) break;
 
       file->cd();
       reader1->GetEntry(entry);
@@ -258,6 +291,10 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "" 
       vector<TLorentzVector> bb_combo;
       get_tlvs_candidates(bjets_tlvs, bb_combo);
 
+      //cout << bjets_tlvs.size() << endl;
+      //cout << bb_combo.size() << "  " << weight << endl;
+
+
       vector<TLorentzVector> qq_combo;
       get_tlvs_candidates(ljets_tlvs, qq_combo);
 
@@ -275,6 +312,13 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "" 
         // cout << qq.M() << endl;
         hist_qq_all0->Fill( qq.M() , weight  );
       }
+
+        for( auto bc : bjets_tlvs ){
+          for(auto qq : qq_combo){
+            auto qqb = bc + qq;
+            hist_qqb_all0->Fill( qqb.M() , weight  );
+          }
+        }
 
       // bjets
       // select all unic unordered samples of N=4 bjets from bjet_candidates into bjets_samples
@@ -330,6 +374,9 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "" 
       // cout << "=== " << endl;
 
       // iterate over event reconstruction candidates
+      full_reco_events best_event;
+      best_event.metric = 999999999999999;
+
       for( int i = 0; i < combinations.size(); i++ ){
         // cout << "combinations " << i << endl;
         // cout << combinations[i].size() << endl;
@@ -385,7 +432,7 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "" 
 
         if( muon_candidates.size() ) l = make_muon(reader2, 0);
         else                         l = make_electron(reader1, 0);
-        continue;
+
         TLorentzVector bl = b_tl + l;
         TLorentzVector nu0 = make_met(reader3, 0);
         TLorentzVector tl, nu, Wl;
@@ -413,7 +460,19 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "" 
         hist_bb_all->Fill( H.M() , weight  );
         hist_bqq_all->Fill( tq.M() , weight  );
         hist_qq_all->Fill( Wq.M() , weight  );
+
+        double metric = calc_metric(Wl, tl, Wq, tq, H);
+        if( best_event.metric > metric )
+          best_event.set( metric, Wl, tl, Wq, tq, H, Y, X );
       }
+
+        hist_nul_BM->Fill( best_event.Wl.M() , weight );
+        hist_blnu_BM->Fill( best_event.tl.M() , weight  );
+        hist_tt_BM->Fill( best_event.Y.M() , weight  );
+        hist_HY_BM->Fill( best_event.X.M() , weight  );
+        hist_bb_BMl->Fill( best_event.H.M() , weight  );
+        hist_bqq_BM->Fill( best_event.tq.M() , weight  );
+        hist_qq_BM->Fill( best_event.Wq.M() , weight  );
 
       // DONE !!! 
       selections->Fill("Selected", 1);
