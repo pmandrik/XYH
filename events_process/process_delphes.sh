@@ -24,7 +24,8 @@ for folder in $path/NMSSM_*; do
 
   root -l -b -q "make_interface.cpp(\""$file"\")"
   #root -l -b -q "process_delphes.cpp(\""$file"\",\"pd_"$pname".root\", \"$file_lhe\")"
-  root -l -b -q "process_delphes.cpp(\""$file"\",\""$file2"\",\"pd_"$pname".root\", \"$oname0\", \"$oname1\")"
+  root -l -b -q "matcher.cpp(\""$file"\",\""$file2"\",\"match_"$pname".root\", \"$oname0\", \"$oname1\")"
+  #root -l -b -q "process_delphes.cpp(\""$file"\",\""$file2"\",\"pd_"$pname".root\", \"$oname0\", \"$oname1\")"
 done
 exit
 

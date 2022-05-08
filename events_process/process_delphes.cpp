@@ -133,15 +133,15 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
   TH2D * hist_bqq_dPt_x_m = new TH2D("hist_bqq_dPt_x_m", "hist_bqq_dPt_x_m", 100,  0, 10, 100, 0, 250);
   TH2D * hist_bqq_dR_x_m  = new TH2D("hist_bqq_dR_x_m", "hist_bqq_dR_x_m", 100,  0, 10, 100, 0, 250);
 
-  TH1D * hist_bb_match = new TH1D("hist_bb_match", "hist_bb_match", 100, 0, 200);
-  TH1D * hist_qqb_match = new TH1D("hist_qbb_match", "hist_qbb_match", 100, 0, 300);
-  TH1D * hist_qqbar_match = new TH1D("hist_qbbar_match", "hist_qbbar_match", 100, 0, 300);
-  TH1D * hist_qq_match    = new TH1D("hist_qq_match", "hist_qq_match", 100, 0, 200);
+  TH1D * hist_bb_match = new TH1D("hist_bb_match", "hist_bb_match", 100, 0, 800);
+  TH1D * hist_qqb_match = new TH1D("hist_qbb_match", "hist_qbb_match", 100, 0, 800);
+  TH1D * hist_qqbar_match = new TH1D("hist_qbbar_match", "hist_qbbar_match", 100, 0, 1000);
+  TH1D * hist_qq_match    = new TH1D("hist_qq_match", "hist_qq_match", 100, 0, 800);
 
   TH1D * hist_wl_match = new TH1D("hist_wl_match", "hist_wl_match", 100, 0, 200);
   TH1D * hist_tl_match = new TH1D("hist_tl_match", "hist_tl_match", 100, 0, 300);
-  TH1D * hist_Y_match = new TH1D("hist_Y_match", "hist_Y_match", 200, 300, 2000);
-  TH1D * hist_X_match = new TH1D("hist_X_match", "hist_X_match", 200, 300, 2000);
+  TH1D * hist_Y_match = new TH1D("hist_Y_match", "hist_Y_match", 200, 0, 2000);
+  TH1D * hist_X_match = new TH1D("hist_X_match", "hist_X_match", 200, 0, 2000);
 
   TH1D * hist_nul_BM       = new TH1D("nul_all_BM", "nul_all_BM", 100, 0, 500);
   TH1D * hist_blnu_BM      = new TH1D("blnu_all_BM", "blnu_all_BM", 100, 0, 1000);
@@ -150,6 +150,8 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
   TH1D * hist_bb_BMl       = new TH1D("bb_al_BMl", "bb_all_BM", 100, 0, 800);
   TH1D * hist_bqq_BM       = new TH1D("bqq_all_BM", "bqq_all_BM", 100, 0, 1000);
   TH1D * hist_qq_BM        = new TH1D("qq_all_BM", "qq_all_BM", 100, 0, 800);
+
+  TH1D * hist_Hb_match_dR  = new TH1D("Hb_match_dR", "Hb_match_dR", 100, 0, 3);
 
   Long64_t total_entrys = 0;
   float weight = 1;
@@ -176,6 +178,8 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
 
   for(int i = 0; i < delphes_files.size(); i++){
     float weight = weights.at( i );
+
+    bool t_lepton = (i == 0);
 
     TFile * file = TFile::Open( delphes_files.at(i).c_str() );
     TTree * tree = (TTree*) file->Get("Delphes");
@@ -309,11 +313,11 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
       selections_nice->Fill("Extra leptons veto", weight);
 
       // RECONSTRUCTIONS ==============================================
-      vector<TLorentzVector> ljets_tlvs;
-      vector<TLorentzVector> bjets_tlvs; 
+      vector<TLorentzVector> ljets_tlvs, bjets_tlvs, jets_tlvs; 
 
       get_tlvs_jets( reader, ljet_candidates, ljets_tlvs );
       get_tlvs_jets( reader, bjet_candidates, bjets_tlvs );
+      get_tlvs_jets( reader,  jet_candidates,  jets_tlvs );
 
       vector<TLorentzVector> bb_combo;
       get_tlvs_candidates(bjets_tlvs, bb_combo);
@@ -335,8 +339,8 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
         cout << "b input data ... out " << endl;
         */
 
-        map<int,int> b_matchs = match_multiple( {b_H.tlv, bbar_H.tlv, b_t.tlv, bbar_t.tlv}, bjets_tlvs, 0.4 );
-        map<int,int> q_matchs = match_multiple( {q.tlv, qbar.tlv}, ljets_tlvs, 0.4 );
+        map<int,int> b_matchs = match_multiple( {b_H.tlv, bbar_H.tlv, b_t.tlv, bbar_t.tlv, q.tlv, qbar.tlv}, jets_tlvs, 0.4 );
+        // map<int,int> q_matchs = match_multiple( {q.tlv, qbar.tlv}, jets_tlvs, 0.4 );
 
         /*
         cout << "b match:" << endl;
@@ -350,48 +354,59 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
         }
         */
 
-        if( b_matchs[0] != -1 ) b_H_match = bjets_tlvs[ b_matchs[0] ]; 
-        if( b_matchs[1] != -1 ) bbar_H_match = bjets_tlvs[ b_matchs[1] ]; 
-        if( b_matchs[2] != -1 ) b_t_match = bjets_tlvs[ b_matchs[2] ]; 
-        if( b_matchs[3] != -1 ) bbar_t_match = bjets_tlvs[ b_matchs[3] ];
+        if( b_matchs[0] != -1 ) b_H_match = jets_tlvs[ b_matchs[0] ]; 
+        if( b_matchs[1] != -1 ) bbar_H_match = jets_tlvs[ b_matchs[1] ]; 
+        if( b_matchs[2] != -1 ) b_t_match = jets_tlvs[ b_matchs[2] ]; 
+        if( b_matchs[3] != -1 ) bbar_t_match = jets_tlvs[ b_matchs[3] ];
 
-        if( q_matchs[0] != -1 ) q_match = ljets_tlvs[ q_matchs[0] ]; 
-        if( q_matchs[1] != -1 ) qbar_match = ljets_tlvs[ q_matchs[1] ];
+        if( b_matchs[0] != -1 ){
+          // cout << b_H_match.DeltaR( b_H.tlv ) << endl;
+          hist_Hb_match_dR->Fill( b_H_match.DeltaR( b_H.tlv ) );
+        }
+
+        if( b_matchs[4] != -1 ) q_match    = jets_tlvs[ b_matchs[4] ]; 
+        if( b_matchs[5] != -1 ) qbar_match = jets_tlvs[ b_matchs[5] ];
+
         qq_match = q_match + qbar_match;
-        if( q_matchs[0] != -1 and q_matchs[1] != -1 ) hist_qq_match->Fill( qq_match.M() , weight  );
-
+        if( b_matchs[4] != -1 and b_matchs[5] != -1 ) hist_qq_match->Fill( qq_match.M() , weight  );
         if( b_matchs[0] != -1 and b_matchs[1] != -1 ) hist_bb_match->Fill( (b_H_match + bbar_H_match).M() , weight  );
-        if( b_matchs[2] != -1 and q_matchs[0] != -1 and q_matchs[1] != -1 ) hist_qqb_match->Fill( (qq_match + b_t_match).M() , weight  );
-        if( b_matchs[3] != -1 and q_matchs[0] != -1 and q_matchs[1] != -1 ) hist_qqbar_match->Fill( (qq_match + bbar_t_match).M() , weight  );
 
         TLorentzVector l;
-        TLorentzVector tq, tl, nu, b_tl, bl;
+        TLorentzVector tq, tl, nu, b_tl, b_tq;
         if( muon_candidates.size() ) l = make_muon(reader, 0);
         else if( electron_candidates.size() ) l = make_electron(reader, 0);
-        bool has_lepton = muon_candidates.size() + electron_candidates.size();
-        bool has_t_hadronic = ( b_matchs[2] != -1 and q_matchs[0] != -1 and q_matchs[1] != -1 );
-        bool has_H          = ( b_matchs[0] != -1 and b_matchs[1] != -1 );
-
-        b_tl = bbar_t_match;
-        bl   = b_tl + l;
-        tq   = qq_match + b_t_match;
+        bool has_lepton     = muon_candidates.size() + electron_candidates.size();
+        bool has_tt = ( b_matchs[2] != -1 and b_matchs[3] != -1 and b_matchs[4] != -1 and b_matchs[5] != -1 );
+        bool has_H  = ( b_matchs[0] != -1 and b_matchs[1] != -1 );
         
-        //if( has_lepton and b_matchs[2] != -1 ) hist_b_match->Fill();
-        if( has_lepton and b_matchs[3] != -1 ){
-          // reconstruct_t_from_bW(bl, nu0, nu, tl);
+        if( has_tt and has_H ){
+
+          if( t_lepton ){
+            b_tl = b_t_match;
+            b_tq = bbar_t_match;
+          } else {
+            b_tl = bbar_t_match;
+            b_tq = b_t_match;
+          }
+
+          hist_qqb_match->Fill(   (qq_match + b_tq).M() , weight  );
+          hist_qqbar_match->Fill( (qq_match + b_tl).M() , weight  );
+
+          tq   = qq_match + b_tq;
 
           TLorentzVector Wl;
           reconstruct_decay(80, l, nu0, nu, Wl);
 
-                        Wl = nu + l;
+          Wl = nu + l;
+          tl = Wl + b_tl;
           TLorentzVector Y = tl + tq;
           TLorentzVector X = Y + (b_H_match + bbar_H_match);
 
           hist_wl_match->Fill( Wl.M() , weight  );
           hist_tl_match->Fill( tl.M() , weight  );
 
-          if( has_t_hadronic ) hist_Y_match->Fill( Y.M()  , weight );
-          if( has_t_hadronic and has_H ) hist_X_match->Fill( X.M()  , weight );
+          hist_Y_match->Fill( Y.M()  , weight );
+          hist_X_match->Fill( X.M()  , weight );
         }
 
       }
