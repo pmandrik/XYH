@@ -373,8 +373,8 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
 
         TLorentzVector l;
         TLorentzVector tq, tl, nu, b_tl, b_tq;
-        if( muon_candidates.size() ) l = make_muon(reader, 0);
-        else if( electron_candidates.size() ) l = make_electron(reader, 0);
+        if( muon_candidates.size() ) l = make_muon(reader, muon_candidates.at(0));
+        else if( electron_candidates.size() ) l = make_electron(reader, electron_candidates.at(0));
         bool has_lepton     = muon_candidates.size() + electron_candidates.size();
         bool has_tt = ( b_matchs[2] != -1 and b_matchs[3] != -1 and b_matchs[4] != -1 and b_matchs[5] != -1 );
         bool has_H  = ( b_matchs[0] != -1 and b_matchs[1] != -1 );
@@ -589,8 +589,8 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
 
         // t -> b_tl l nu
         TLorentzVector l;
-        if( muon_samples.size() ) l = make_muon(reader, 0);
-        else                      l = make_electron(reader, 0);
+        if( muon_samples.size() ) l = make_muon(reader, muon_candidates.at(0));
+        else                      l = make_electron(reader, electron_candidates.at(0));
 
         TLorentzVector bl = b_tl + l;
         TLorentzVector nu0 = make_met(reader, 0);

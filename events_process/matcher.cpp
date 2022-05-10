@@ -86,9 +86,9 @@ void matcher( string file, string file_tbar, string ofile_name, string file_from
   UInt_t Jet_matches[ 30 ];
   TBranch* my_new_branch = tree_out->Branch( "JetMatches", Jet_matches, "Jet_matches[30]/i" );
 
-  TH1D * matching_size = new TH1D("matching_size", "matching_size", 20, 0, 20);
+  TH1D * matching_size  = new TH1D("matching_size", "matching_size", 20, 0, 20);
   TH1D * matching_distr = new TH1D("matching_distr", "matching_distr", 20, 0, 20);
-  TH1D * matching_prob = new TH1D("matching_prob", "matching_prob", 10, 0, 10);
+  TH1D * matching_prob  = new TH1D("matching_prob", "matching_prob", 10, 0, 10);
 
   TFile * file1 = TFile::Open( delphes_files.at(0).c_str() );
   TTree * tree1 = (TTree*) file1->Get("Delphes");

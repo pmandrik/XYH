@@ -430,8 +430,8 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "" 
 
         // cout << muon_samples.size() << "!!!" << " " << reader2->numbermuon << endl;
 
-        if( muon_candidates.size() ) l = make_muon(reader2, 0);
-        else                         l = make_electron(reader1, 0);
+        if( muon_candidates.size() ) l = make_muon(reader, muon_candidates.at(0));
+        else                         l = make_electron(reader, electron_candidates.at(0));
 
         TLorentzVector bl = b_tl + l;
         TLorentzVector nu0 = make_met(reader3, 0);
