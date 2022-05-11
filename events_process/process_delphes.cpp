@@ -77,7 +77,7 @@ struct full_reco_events{
   }
 };
 
-void process_delphes( string file, string file_tbar, string ofile_name, string file_from_lhe_t = "", string file_from_lhe_tbar = "" ) {
+void process_delphes( string file, string file_tbar, string ofile_name, string file_from_lhe_t = "", string file_from_lhe_tbar = "", string csvfile_name = "" ) {
   vector<string> delphes_files = { file,            file_tbar          } ;
   vector<string> lhe_files     = { file_from_lhe_t, file_from_lhe_tbar } ;
 
@@ -152,6 +152,24 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
   TH1D * hist_qq_BM        = new TH1D("qq_all_BM", "qq_all_BM", 100, 0, 800);
 
   TH1D * hist_Hb_match_dR  = new TH1D("Hb_match_dR", "Hb_match_dR", 100, 0, 3);
+
+  std::ofstream myfile;
+  myfile.open ( csvfile_name );
+
+  vector<string> header = { "" };
+  vector<string> vars = { "H", "tl", "tq", "Y", "X", "Wq", "Wl", "nu", "l", "btl", "btq", "bH1", "bH2", "q1", "q2" };  
+  for( auto var : vars ){
+    header.push_back( var + "Pt" );
+    header.push_back( var + "Eta" );
+    header.push_back( var + "Phi" );
+    header.push_back( var + "M" );
+  }
+
+  for(int i = 0; i <header.size(); i++){
+    myfile << header.at(i);
+    if( i != header.size() - 1) myfile << " ";
+  }
+  myfile << "\n";
 
   Long64_t total_entrys = 0;
   float weight = 1;
@@ -252,7 +270,7 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
       // muon candidates --- --- --- --- --- --- --- 
       vector<int> muon_candidates;
       for(int i = 0; i < reader->Muon_; i++){
-        if( reader->Muon_PT[i] < 30 ) continue;
+        if( reader->Muon_PT[i] < 26 ) continue;
         if( TMath::Abs(reader->Muon_Eta[i]) > 2.1 ) continue;
         if( reader->Muon_IsolationVar[i] > 0.15 ) continue; 
         muon_candidates.push_back(i);
@@ -261,7 +279,7 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
       // electron candidates --- --- --- --- --- --- --- 
       vector<int> electron_candidates;
       for(int i = 0; i < reader->Electron_; i++){
-        if( reader->Electron_PT[i] < 26 ) continue;
+        if( reader->Electron_PT[i] < 30 ) continue;
         if( TMath::Abs(reader->Electron_Eta[i]) > 2.1 ) continue; 
         if( TMath::Abs(reader->Electron_Eta[i]) > 1.4442 and TMath::Abs(reader->Electron_Eta[i]) < 1.5560 ) continue; 
         if( reader->Electron_IsolationVar[i] > 0.06 ) continue; 
@@ -379,7 +397,7 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
         bool has_tt = ( b_matchs[2] != -1 and b_matchs[3] != -1 and b_matchs[4] != -1 and b_matchs[5] != -1 );
         bool has_H  = ( b_matchs[0] != -1 and b_matchs[1] != -1 );
         
-        if( has_tt and has_H ){
+        if( true ){
 
           if( t_lepton ){
             b_tl = b_t_match;
@@ -389,12 +407,9 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
             b_tq = b_t_match;
           }
 
-          hist_qqb_match->Fill(   (qq_match + b_tq).M() , weight  );
-          hist_qqbar_match->Fill( (qq_match + b_tl).M() , weight  );
-
           tq   = qq_match + b_tq;
 
-          TLorentzVector Wl;
+          TLorentzVector Wl, Hih = b_H_match + bbar_H_match;
           reconstruct_decay(80, l, nu0, nu, Wl);
 
           Wl = nu + l;
@@ -402,11 +417,37 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
           TLorentzVector Y = tl + tq;
           TLorentzVector X = Y + (b_H_match + bbar_H_match);
 
-          hist_wl_match->Fill( Wl.M() , weight  );
-          hist_tl_match->Fill( tl.M() , weight  );
+          if( has_tt and has_H ){
+            hist_qqb_match->Fill(   (qq_match + b_tq).M() , weight  );
+            hist_qqbar_match->Fill( (qq_match + b_tl).M() , weight  );
 
-          hist_Y_match->Fill( Y.M()  , weight );
-          hist_X_match->Fill( X.M()  , weight );
+            hist_wl_match->Fill( Wl.M() , weight  );
+            hist_tl_match->Fill( tl.M() , weight  );
+
+            hist_Y_match->Fill( Y.M()  , weight );
+            hist_X_match->Fill( X.M()  , weight );
+          }
+
+          // dump event content to csv ... 
+          if( q_match.Pt() > qbar_match.Pt() ) swap( q_match, qbar_match );
+          if( b_H_match.Pt() > bbar_H_match.Pt() ) swap( bbar_H_match, bbar_H_match );
+
+          myfile << 1 << " ";
+          myfile << TMath::Log( Hih.Pt() + 1) << " " << Hih.Eta()/2.5 << " " << Hih.Phi()/3.15 << " " << TMath::Log(Hih.M() + 1) << " " ;
+          myfile << TMath::Log( tl.Pt() + 1) << " " << tl.Eta()/2.5 << " " << tl.Phi()/3.15 << " " << TMath::Log(tl.M() + 1) << " " ;
+          myfile << TMath::Log( tq.Pt() + 1) << " " << tq.Eta()/2.5 << " " << tq.Phi()/3.15 << " " << TMath::Log(tq.M() + 1) << " " ;
+          myfile << TMath::Log( Y.Pt() + 1) << " " << Y.Eta()/2.5 << " " << Y.Phi()/3.15 << " " << TMath::Log(Y.M() + 1) << " " ;
+          myfile << TMath::Log( X.Pt() + 1) << " " << X.Eta()/2.5 << " " << X.Phi()/3.15 << " " << TMath::Log(X.M() + 1) << " " ;
+          myfile << TMath::Log( qq_match.Pt() + 1) << " " << qq_match.Eta()/2.5 << " " << qq_match.Phi()/3.15 << " " << TMath::Log(qq_match.M() + 1) << " " ;
+          myfile << TMath::Log( Wl.Pt() + 1) << " " << Wl.Eta()/2.5 << " " << Wl.Phi()/3.15 << " " << TMath::Log(Wl.M() + 1) << " " ;
+          myfile << TMath::Log( nu.Pt() + 1) << " " << nu.Eta()/2.5 << " " << nu.Phi()/3.15 << " " << TMath::Log(nu.M() + 1) << " " ;
+          myfile << TMath::Log( l.Pt() + 1) << " " << l.Eta()/2.5 << " " << l.Phi()/3.15 << " " << TMath::Log(l.M() + 1) << " " ;
+          myfile << TMath::Log( b_tl.Pt() + 1) << " " << b_tl.Eta()/2.5 << " " << b_tl.Phi()/3.15 << " " << TMath::Log(b_tl.M() + 1) << " " ;
+          myfile << TMath::Log( b_tq.Pt() + 1) << " " << b_tq.Eta()/2.5 << " " << b_tq.Phi()/3.15 << " " << TMath::Log(b_tq.M() + 1) << " " ;
+          myfile << TMath::Log( b_H_match.Pt() + 1) << " " << b_H_match.Eta()/2.5 << " " << b_H_match.Phi()/3.15 << " " << TMath::Log(b_H_match.M() + 1) << " " ;
+          myfile << TMath::Log( bbar_H_match.Pt() + 1) << " " << bbar_H_match.Eta()/2.5 << " " << bbar_H_match.Phi()/3.15 << " " << TMath::Log(bbar_H_match.M() + 1) << " " ;
+          myfile << TMath::Log( q_match.Pt() + 1) << " " << q_match.Eta()/2.5 << " " << q_match.Phi()/3.15 << " " << TMath::Log(q_match.M() + 1) << " " ;
+          myfile << TMath::Log( qbar_match.Pt() + 1) << " " << qbar_match.Eta()/2.5 << " " << qbar_match.Phi()/3.15 << " " << TMath::Log(qbar_match.M() + 1) << endl;
         }
 
       }
@@ -539,6 +580,7 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
       full_reco_events best_event;
       best_event.metric = 999999999999999;
 
+      bool save_once = true;
       for( int i = 0; i < combinations.size(); i++ ){
         // cout << "combinations " << i << endl;
         // cout << combinations[i].size() << endl;
@@ -570,6 +612,7 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
         // cout << type_h_reco << endl;
         TLorentzVector b1_h = make_jet(reader, b_hs[0]);
         TLorentzVector b2_h = make_jet(reader, b_hs[1]);
+        if( b1_h.Pt() < b2_h.Pt() ) swap(b1_h, b2_h);
         // cout << b1_h_index << " " << b2_h_index << endl;
 
         TLorentzVector b_tl = make_jet(reader, b_tls[0]);
@@ -589,8 +632,8 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
 
         // t -> b_tl l nu
         TLorentzVector l;
-        if( muon_samples.size() ) l = make_muon(reader, muon_candidates.at(0));
-        else                      l = make_electron(reader, electron_candidates.at(0));
+        if( muon_candidates.size() ) l = make_muon(reader, muon_candidates.at(0));
+        else                         l = make_electron(reader, electron_candidates.at(0));
 
         TLorentzVector bl = b_tl + l;
         TLorentzVector nu0 = make_met(reader, 0);
@@ -608,8 +651,27 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
 
         // mb cuts
         // if( abs( H.M() - 125 ) > 30 ) continue;
-        // if( b1_h.Pt() < b2_h.Pt() ) swap(b1_h, b2_h);
         // if( b1_h.Pt() < 15 or b2_h.Pt() < 15 ) continue;
+
+        if( type_h_reco && type_tl_reco && type_tq_reco && save_once ){
+          save_once = false;
+          myfile << 0 << " ";
+          myfile << TMath::Log( H.Pt() + 1) << " " << H.Eta()/2.5 << " " << H.Phi()/3.15 << " " << TMath::Log(H.M() + 1) << " " ;
+          myfile << TMath::Log( tl.Pt() + 1) << " " << tl.Eta()/2.5 << " " << tl.Phi()/3.15 << " " << TMath::Log(tl.M() + 1) << " " ;
+          myfile << TMath::Log( tq.Pt() + 1) << " " << tq.Eta()/2.5 << " " << tq.Phi()/3.15 << " " << TMath::Log(tq.M() + 1) << " " ;
+          myfile << TMath::Log( Y.Pt() + 1) << " " << Y.Eta()/2.5 << " " << Y.Phi()/3.15 << " " << TMath::Log(Y.M() + 1) << " " ;
+          myfile << TMath::Log( X.Pt() + 1) << " " << X.Eta()/2.5 << " " << X.Phi()/3.15 << " " << TMath::Log(X.M() + 1) << " " ;
+          myfile << TMath::Log( Wq.Pt() + 1) << " " << Wq.Eta()/2.5 << " " << Wq.Phi()/3.15 << " " << TMath::Log(Wq.M() + 1) << " " ;
+          myfile << TMath::Log( Wl.Pt() + 1) << " " << Wl.Eta()/2.5 << " " << Wl.Phi()/3.15 << " " << TMath::Log(Wl.M() + 1) << " " ;
+          myfile << TMath::Log( nu.Pt() + 1) << " " << nu.Eta()/2.5 << " " << nu.Phi()/3.15 << " " << TMath::Log(nu.M() + 1) << " " ;
+          myfile << TMath::Log( l.Pt() + 1) << " " << l.Eta()/2.5 << " " << l.Phi()/3.15 << " " << TMath::Log(l.M() + 1) << " " ;
+          myfile << TMath::Log( b_tl.Pt() + 1) << " " << b_tl.Eta()/2.5 << " " << b_tl.Phi()/3.15 << " " << TMath::Log(b_tl.M() + 1) << " " ;
+          myfile << TMath::Log( b_tq.Pt() + 1) << " " << b_tq.Eta()/2.5 << " " << b_tq.Phi()/3.15 << " " << TMath::Log(b_tq.M() + 1) << " " ;
+          myfile << TMath::Log( b1_h.Pt() + 1) << " " << b1_h.Eta()/2.5 << " " << b1_h.Phi()/3.15 << " " << TMath::Log(b1_h.M() + 1) << " " ;
+          myfile << TMath::Log( b2_h.Pt() + 1) << " " << b2_h.Eta()/2.5 << " " << b2_h.Phi()/3.15 << " " << TMath::Log(b2_h.M() + 1) << " " ;
+          myfile << TMath::Log( q1.Pt() + 1) << " " << q1.Eta()/2.5 << " " << q1.Phi()/3.15 << " " << TMath::Log(q1.M() + 1) << " " ;
+          myfile << TMath::Log( q2.Pt() + 1) << " " << q2.Eta()/2.5 << " " << q2.Phi()/3.15 << " " << TMath::Log(q2.M() + 1) << endl;
+        }
 
         // hists
         hist_nul_all->Fill( Wl.M() , weight );
@@ -639,6 +701,7 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
       total_weight_sum += weight;
     }
 
+    myfile.close();
     file->Close();
   }
 

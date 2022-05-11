@@ -220,7 +220,7 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "" 
       // muon candidates --- --- --- --- --- --- --- 
       vector<int> muon_candidates;
       for(int i = 0; i < reader2->numbermuon; i++){
-        if( reader2->muon_pt->at(i) < 30 ) continue;
+        if( reader2->muon_pt->at(i) < 26 ) continue;
         if( TMath::Abs(reader2->muon_eta->at(i)) > 2.1 ) continue;
         if( reader2->muon_pfreliso04all->at(i) > 0.15 ) continue; 
         muon_candidates.push_back(i);
@@ -229,7 +229,7 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "" 
       // electron candidates --- --- --- --- --- --- --- 
       vector<int> electron_candidates;
       for(int i = 0; i < reader1->numberelectron; i++){
-        if( reader1->electron_pt->at(i) < 26 ) continue;
+        if( reader1->electron_pt->at(i) < 30 ) continue;
         if( TMath::Abs(reader1->electron_eta->at(i)) > 2.1 ) continue; 
         if( TMath::Abs(reader1->electron_eta->at(i)) > 1.4442 and TMath::Abs(reader1->electron_eta->at(i)) < 1.5560 ) continue; 
         if( reader1->electron_iso->at(i) > 0.06 ) continue; 
@@ -430,8 +430,8 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "" 
 
         // cout << muon_samples.size() << "!!!" << " " << reader2->numbermuon << endl;
 
-        if( muon_candidates.size() ) l = make_muon(reader, muon_candidates.at(0));
-        else                         l = make_electron(reader, electron_candidates.at(0));
+        if( muon_candidates.size() ) l = make_muon(reader2, muon_candidates.at(0));
+        else                         l = make_electron(reader1, electron_candidates.at(0));
 
         TLorentzVector bl = b_tl + l;
         TLorentzVector nu0 = make_met(reader3, 0);
