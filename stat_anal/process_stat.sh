@@ -30,6 +30,6 @@ do_fit(){
 #do_fit "H_m_xfactor_1" 5 1
 #do_fit "H_m_xfactor_2" 5 1
 
-do_hists "" 15 1
+do_hists "" 35 1
 
 #do_fit "pd_NMSSM_XYH_ttbb_MX_900_MY_600" 25 1

@@ -1,7 +1,7 @@
 
 void make_hists(string var="HY_all_BM", string out_path=".", int nbins = 25, int lumi_factor = 1, bool cut = false){
   string path_signal = "/home/pmandrik/work/projects/XYH/gitrepo/XYH/events_process/";
-  string path_background = "/home/pmandrik/work/projects/XYH/gitrepo/XYH/opendata_process/pd_file.root";
+  string path_background = "/home/pmandrik/work/projects/XYH/gitrepo/XYH/opendata_process/";
 
   vector<string> signal_files = {"pd_NMSSM_XYH_ttbb_MX_650_MY_375", 
     "pd_NMSSM_XYH_ttbb_MX_900_MY_600",
@@ -13,17 +13,48 @@ void make_hists(string var="HY_all_BM", string out_path=".", int nbins = 25, int
     "pd_NMSSM_XYH_ttbb_MX_1900_MY_1600",
   };
 
-  TFile * file_b = TFile::Open((path_background).c_str());
-  TH1D* histb = (TH1D*) file_b->Get("HY_all_BM");
-  histb->SetName("ttbar");
+  vector<string> back_files = {"pd_file_650_MY_375",
+    "pd_file_900_MY_600",
+    "pd_file_1300_MY_475",
+    "pd_file_1300_MY_975",
+    "pd_file_1700_MY_475",
+    "pd_file_1700_MY_1225",
+    "pd_file_1900_MY_475",
+    "pd_file_1900_MY_1600",
+  };
 
-  vector<TH1D*> hists = { histb };
+  //TFile * file_b = TFile::Open((path_background + "pd_file.root").c_str());
+  //TH1D* histb = (TH1D*) file_b->Get("HY_all_BM");
+  //histb->SetName("ttbar");
+  //vector<TH1D*> hists = { histb };
+
+  vector<TH1D*> hists = { };
   for(auto fname : signal_files){
     TFile * file_s = TFile::Open((path_signal + fname + ".root").c_str());
+
     TH1D* hista = (TH1D*) file_s->Get("HY_all_BM");
     cout << fname << " " << hista << endl;
     hista->SetName( fname.c_str() );
     hists.push_back( hista );
+
+    TH1D* hista2 = (TH1D*) file_s->Get("HY_eval");
+    cout << fname << " " << hista2 << endl;
+    hista2->SetName( (fname + "eval").c_str() );
+    hists.push_back( hista2 );
+  }
+
+  for(auto fname : back_files){
+    TFile * file_s = TFile::Open((path_background + fname + ".root").c_str());
+
+    TH1D* hista = (TH1D*) file_s->Get("HY_all_BM");
+    cout << fname << " " << hista << endl;
+    hista->SetName( fname.c_str() );
+    hists.push_back( hista );
+
+    TH1D* hista2 = (TH1D*) file_s->Get("HY_eval");
+    cout << fname << " " << hista2 << endl;
+    hista2->SetName( (fname + "eval").c_str() );
+    hists.push_back( hista2 );
   }
 
   TFile * file_out = new TFile((out_path + "/" + "hists_limits_" + to_string(nbins) + "_" + to_string(lumi_factor) + ".root").c_str(), "RECREATE");
@@ -59,10 +90,20 @@ void make_hists(string var="HY_all_BM", string out_path=".", int nbins = 25, int
 
     TH1D * new_hist = new TH1D((string(hist->GetName()) + "_" + to_string(nbins) + "_" + to_string(lumi_factor)).c_str(), hist->GetTitle(), nbins, left_entry, right_entry);        
     for(int i = 1; i <= hist->GetXaxis()->GetNbins(); i++){
-      if( name.find("ttbar") != std::string::npos ) // ttbar normalisation // 
+      if( name.find("ttbar") != std::string::npos or name.find("pd_file_") != std::string::npos ) // ttbar normalisation // 
         new_hist->Fill(hist->GetBinCenter(i), N_expected_ttbar*hist->GetBinContent(i) / float(lumi_factor) );
       else // signal normalisation
         new_hist->Fill(hist->GetBinCenter(i), N_expected_signal*hist->GetBinContent(i) / float(lumi_factor) );
+    }
+
+
+    if( name.find("ttbar") != std::string::npos or name.find("pd_file_") != std::string::npos ) {// ttbar normalisation // 
+      new_hist->Fill(hist->GetBinCenter(hist->GetXaxis()->GetNbins()-1), N_expected_ttbar*hist->GetBinContent(hist->GetXaxis()->GetNbins()+1) / float(lumi_factor) );
+      // cout << N_expected_ttbar*hist->GetBinContent(hist->GetXaxis()->GetNbins()+1) << endl;
+    }
+    else { // signal normalisation
+      new_hist->Fill(hist->GetBinCenter(hist->GetXaxis()->GetNbins()-1) , N_expected_signal*hist->GetBinContent(hist->GetXaxis()->GetNbins()+1) / float(lumi_factor) );
+      cout << N_expected_signal*hist->GetBinContent(hist->GetXaxis()->GetNbins()+1) << endl;
     }
   }
 

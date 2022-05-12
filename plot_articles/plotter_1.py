@@ -11,8 +11,19 @@ points = [(650, 375), (900, 600), (1300, 475), (1300, 975), (1700, 475), (1700, 
 path = "/home/pmandrik/work/projects/XYH/gitrepo/XYH/events_process/"
 files = [ path + "pd_NMSSM_XYH_ttbb_MX_" + str(point[0]) + "_MY_" + str(point[1]) + ".root" for point in points ] # pd_NMSSM_XYH_ttbb_MX_650_MY_375.root
 
-points += [ r"$t\bar{t}$ background" ]
-files  += [ "/home/pmandrik/work/projects/XYH/gitrepo/XYH/opendata_process/pd_file.root" ]
+#points += [ r"$t\bar{t}$ background" ]
+#files  += [ "/home/pmandrik/work/projects/XYH/gitrepo/XYH/opendata_process/pd_file.root" ]
+
+point_ttbar = []
+files_ttbar = []
+for point in points[:] :
+  point_ttbar += [ r"$t\bar{t}$ DNN " + str( point ) ]
+  files_ttbar += [ "/home/pmandrik/work/projects/XYH/gitrepo/XYH/opendata_process/pd_file_" + str(point[0]) + "_MY_" + str(point[1]) + ".root" ]
+
+points = point_ttbar
+files  = files_ttbar
+
+print( point_ttbar, files )
 
 points_X = list(set( [ point[0] for point in points ] ))
 colors = []
@@ -27,8 +38,8 @@ import ROOT
 for point, file in zip(points, files):
   print( file )
   f = ROOT.TFile.Open( file, "READ" )
-  for hist_name in ["selections_nice", "N_bjets", "N_ljets", "N_l"] + ["bb_all0", "qq_all0", "qqb_all0", "nul_all", "blnu_all", "tt_all", "HY_all"] + ["bb_al_BMl", "qq_all_BM", "bqq_all_BM", "nul_all_BM", "blnu_all_BM", "tt_all_BM", "HY_all_BM"]:
-    print(hist_name)
+  for hist_name in ["selections_nice", "N_bjets", "N_ljets", "N_l"] + ["bb_all0", "qq_all0", "qqb_all0", "nul_all", "blnu_all", "tt_all", "HY_all"] + ["bb_al_BMl", "qq_all_BM", "bqq_all_BM", "nul_all_BM", "blnu_all_BM", "tt_all_BM", "HY_all_BM", "tt_eval", "HY_eval"]:
+    print(str(point) + "_" + hist_name, hist_name)
     hist = f.Get( hist_name )
 
     array = []
@@ -219,7 +230,7 @@ if False :
       unfilled_markers = [m for m, func in Line2D.markers.items() if func != 'nothing' and m not in Line2D.filled_markers]
       make_hists_plot( data_points, axis_label, outname, bins = bins, cols=colors_t2, limitx0=limitx0, limitx=limitx )
 
-if True :
+if False :
     # points = [(650, 375), (900, 600), (1300, 975), (1700, 475), (1900, 1600), r"$t\bar{t}$ background"]
     #for hist_name, axis_label in zip(["bb_all0", "qq_all0", "qqb_all0", "nul_all", "blnu_all", "tt_all", "HY_all"], ["bb_all0", "qq_all0", "qqb_all0", "nul_all", "blnu_all", "tt_all", "HY_all"]):
     reqs = [ 
@@ -275,7 +286,32 @@ if True :
       unfilled_markers = [m for m, func in Line2D.markers.items() if func != 'nothing' and m not in Line2D.filled_markers]
       make_hists_plot( data_points, axis_label, outname, bins = bins, cols=colors_t2, limitx0=limitx0, limitx=limitx )
 
+if True :
+    # points = [(650, 375), (900, 600), (1300, 975), (1700, 475), (1900, 1600), r"$t\bar{t}$ background"]
+    #for hist_name, axis_label in zip(["bb_all0", "qq_all0", "qqb_all0", "nul_all", "blnu_all", "tt_all", "HY_all"], ["bb_all0", "qq_all0", "qqb_all0", "nul_all", "blnu_all", "tt_all", "HY_all"]):
+    reqs = [ 
+      ["tt_eval",   r"$M(t\bar{t})$ GeV", 2000],
+      ["HY_eval",   r"$M(HY)$ GeV", 2500],
+    ]
+    for hist_name, axis_label, limitx in reqs:
+      outname   = hist_name
+      data_points = []
+      for point in points:
+        data_point = answer[ str(point) + "_" + hist_name ]
+        data_points += [ data_point ]
+        width   = data_points[0][1][0] - data_points[0][0][0]
+      
+      width   = data_points[0][1][0] - data_points[0][0][0]
+      start_x = data_points[0][0][0] - width/2
+      end_x   = data_points[0][-1][0] + width/2
+      bins = [ 2 *width * i for i in range( int((end_x-start_x) / width) + 1 ) ]
 
+      # print(start_x, end_x, len(data_points[0]),width,(end_x-start_x)/width)
+      # print( bins )
+      # print( data_point )
+
+      unfilled_markers = [m for m, func in Line2D.markers.items() if func != 'nothing' and m not in Line2D.filled_markers]
+      make_hists_plot( data_points, axis_label, outname, bins = bins, cols=colors_t2, limitx=limitx, dense=True )
 
 
 

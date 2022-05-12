@@ -3,7 +3,11 @@ double get_br( double value ){
   float L = 137; // 137 fb − 1
   int n_existed = 20000;
   float xsec_Br = value * n_existed / L; // 20000 / (138 * 1000) = 0.14492753623188406
-  return xsec_Br;
+
+  float BR_H_bb    = 5.824E-01; // https://twiki.cern.ch/twiki/bin/view/LHCPhysics/CERNYellowReportPageBR
+  float BR_H_ttbar = 4./9.;
+
+  return xsec_Br / BR_H_bb / BR_H_ttbar;
 }
 
 vector<double> get_trex_limit(string path){
@@ -64,12 +68,18 @@ void plot_results(){
 
     map<pair<int, int>, vector<double> > points;
     for(auto point : mass_points){
-      points[ point ] = get_trex_limit("results_cuts/resultspd_NMSSM_XYH_ttbb_MX_" + to_string(point.first) + "_MY_" + to_string(point.second) + "_15_1.root");
+      //points[ point ] = get_trex_limit("results_cuts/resultspd_NMSSM_XYH_ttbb_MX_" + to_string(point.first) + "_MY_" + to_string(point.second) + "_15_1.root");
+    }
+
+    for(auto point : mass_points){
+      cout << endl;
+      get_trex_limit("results_cuts/resultspd_NMSSM_XYH_ttbb_MX_" + to_string(point.first) + "_MY_" + to_string(point.second) + "_15_1.root");
+      points[ point ] = get_trex_limit("results_eval/resultspd_NMSSM_XYH_ttbb_MX_" + to_string(point.first) + "_MY_" + to_string(point.second) + "eval_35_1.root");
     }
 
     BrasilDrawer bd0;
     bd0.style = new CanvasStyle();
-    bd0.label_y = "95\% C.L. limits on #sigma #times Br(X#rightarrow Y(tt) H(bb)), [fb]";
+    bd0.label_y = "#sigma#times Br(X#rightarrow Y H)#times Br(Y #rightarrow tt), [fb]";
     bd0.label_x = "(M_{X}, M_{Y}) [GeV]";
     bd0.left_text_src = "LHC CMS Run II Projection (137 fb^{-1}, 13 TeV)";
     bd0.right_text_src = "Semi-leptonic t#bar{t} decay";
@@ -85,7 +95,7 @@ void plot_results(){
     //TH1D * extra_hist = bd0.GetHist( "no sys", no_sys );
     //extra_hist->SetLineColor(2);
     // extra_hist->Draw("same hist");
-    canv->Print("limits_plot.pdf");
+    canv->Print("limits_plot_eval.pdf");
   }
 
 }

@@ -81,8 +81,48 @@ struct full_reco_events{
   }
 };
 
-void process_delphes( string file, string ofile_name, string file_from_lhe = "" ) {
+void process_delphes( string file, string ofile_name, string file_from_lhe = "", string scv_file_name = "", string input_train_name = "" ) {
   vector<string> delphes_files = { file };
+
+  // for csv ==========================================================
+    std::ifstream infile;
+    if( input_train_name.size() ){
+      infile = std::ifstream( input_train_name );
+    }
+
+    std::ofstream myfile;
+    myfile.open ( scv_file_name );
+    vector<string> header;
+
+        for(int j = 0; j < 8; j++){
+            header.push_back( "JetMatch" + to_string(j) + "_H" );
+            header.push_back( "JetMatch" + to_string(j) + "_tq" );
+            header.push_back( "JetMatch" + to_string(j) + "_tl" );
+        }
+        for(int i = 0; i < 8; i++){
+          header.push_back( "JetPt" + to_string(i) );
+          header.push_back( "JetEta" + to_string(i) );
+          header.push_back( "JetPhi" + to_string(i) );
+          header.push_back( "JetM" + to_string(i) );
+          header.push_back( "JetBtag" + to_string(i) );
+        }
+        for(int j = 0; j < 8; j++){
+          for(int k = j; k < 8; k++){
+            header.push_back( "Jet" + to_string(j) + "N" + to_string(k) + "_M" );
+            header.push_back( "Jet" + to_string(j) + "N" + to_string(k) + "_dR" );
+          }
+        }
+    vector<string> header2 = { "nuPt", "nuPhi", "lPt", "lEta", "lPhi", "Nmu", "Ne", "wlPt", "WlEta", "WlPhi", "WlM" };
+
+
+    for(auto item : header){
+      myfile << item << " ";
+    }
+    for(auto item : header2){
+      myfile << item << " ";
+    }
+    myfile << "\n";
+  // end csv ==========================================================
 
   TFile * ofile = TFile::Open( ofile_name.c_str(), "RECREATE" );
   TH1D * selections = new TH1D("selections", "selections", 100, 0, 100);
@@ -153,6 +193,14 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "" 
   TH1D * hist_bb_BMl       = new TH1D("bb_al_BMl", "bb_all_BM", 100, 0, 800);
   TH1D * hist_bqq_BM       = new TH1D("bqq_all_BM", "bqq_all_BM", 100, 0, 1000);
   TH1D * hist_qq_BM        = new TH1D("qq_all_BM", "qq_all_BM", 100, 0, 800);
+
+  TH1D * hist_blnu_eval = new TH1D("blnu_eval", "blnu_eval", 100, 0, 1000);
+  TH1D * hist_tt_eval   = new TH1D("tt_eval", "tt_eval", 200, 0, 3000);
+  TH1D * hist_HY_eval   = new TH1D("HY_eval", "HY_eval", 200, 0, 3000);
+  TH1D * hist_bb_eval   = new TH1D("bb_eval", "bb_eval", 100, 0, 800);
+  TH1D * hist_bqq_eval  = new TH1D("bqq_eval", "bqq_eval", 100, 0, 1000);
+
+  TH2D * hist_score_vs_hmass  = new TH2D("hist_score_vs_hmass", "hist_score_vs_hmass", 100,  0, 1, 100, 0, 250);
 
   Long64_t total_entrys = 0;
   float weight = 1;
@@ -282,11 +330,98 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "" 
       selections_nice->Fill("Extra leptons veto", weight);
 
       // RECONSTRUCTIONS ==============================================
-      vector<TLorentzVector> ljets_tlvs;
-      vector<TLorentzVector> bjets_tlvs; 
+      vector<TLorentzVector> bjets_tlvs, ljets_tlvs, jets_tlvs;
 
       get_tlvs_jets( reader4, ljet_candidates, ljets_tlvs );
       get_tlvs_jets( reader4, bjet_candidates, bjets_tlvs );
+      get_tlvs_jets( reader4, jet_candidates,  jets_tlvs  );
+
+      // for csv ==========================================================
+      string cluster;
+      double score_h_1, score_h_1t, score_h_2, score_h_2t, score_tq_1, score_tq_1t, score_tq_2, score_tq_2t, score_tq_3, score_tq_3t, score_tl_1, score_tl_1t;
+      int index_h_1, index_h_2, index_tq_1, index_tq_2, index_tq_3, index_tl_1;
+      if( input_train_name.size() ){
+        /*
+        0.33973044 0 H 2
+        0.32396072 0 H 1
+        0.6927199 1 tq 0
+        0.20426865 0 tq 3
+        0.16255765 0 tq 4
+        0.051923893 0 tl 5
+        */
+        infile >> score_h_1 >> score_h_1t >> cluster >> index_h_1;
+        infile >> score_h_2 >> score_h_2t >> cluster >> index_h_2;
+        infile >> score_tq_1 >> score_tq_1t >> cluster >> index_tq_1;
+        infile >> score_tq_2 >> score_tq_2t >> cluster >> index_tq_2;
+        infile >> score_tq_3 >> score_tq_3t >> cluster >> index_tq_3;
+        infile >> score_tl_1 >> score_tl_1t >> cluster >> index_tl_1;
+
+        // cout << score_h_1 << " " << score_h_1t << " " << cluster << " " << index_h_1 << " " << endl;
+        TLorentzVector jet_h1 = jets_tlvs[ index_h_1 ];
+        TLorentzVector jet_h2 = jets_tlvs[ index_h_2 ];
+        TLorentzVector jet_tq1 = jets_tlvs[ index_tq_1 ];
+        TLorentzVector jet_tq2 = jets_tlvs[ index_tq_2 ];
+        TLorentzVector jet_tq3 = jets_tlvs[ index_tq_3 ];
+        TLorentzVector jet_tl1 = jets_tlvs[ index_tl_1 ];
+
+        hist_score_vs_hmass->Fill( score_h_1 + score_h_2, (jet_h1+jet_h2).M() );
+
+        TLorentzVector l, nu, Wl;
+        if( muon_candidates.size() ) l = make_muon(reader2, muon_candidates.at(0));
+        else                         l = make_electron(reader1, electron_candidates.at(0));
+        reconstruct_decay(80, l, nu0, nu, Wl);
+
+        TLorentzVector H_eval = jet_h1 + jet_h2;
+        TLorentzVector tq_eval = jet_tq1 + jet_tq2 + jet_tq3;
+        TLorentzVector tl_eval = jet_tl1 + Wl;
+        TLorentzVector Y_eval = tq_eval + tl_eval;
+        TLorentzVector X_eval = H_eval + tq_eval + tl_eval;
+
+        hist_blnu_eval->Fill( tl_eval.M() , weight  );
+        hist_tt_eval->Fill( Y_eval.M() , weight  );
+        hist_HY_eval->Fill( X_eval.M() , weight  );
+        hist_bb_eval->Fill( H_eval.M() , weight  );
+        hist_bqq_eval->Fill( tq_eval.M() , weight  );
+      }
+
+      for(int j = 0; j < 8; j++){
+            myfile << 0 << " ";
+            myfile << 0 << " ";
+            myfile << 0 << " ";
+      }
+      for(int j = 0; j < 8; j++){
+        TLorentzVector jet;
+        if( j < jet_candidates.size() ){
+          int jet_index = jet_candidates[ j ];
+          TLorentzVector jet = jets_tlvs[ j ] ;
+          
+          myfile << TMath::Log( jet.Pt() + 1) << " " << jet.Eta()/2.5 << " " << jet.Phi()/3.15 << " " << TMath::Log(jet.M() + 1) << " " ;
+          myfile << (reader4->jet_btag->at(jet_index) <  0.605) << " ";
+        } else {
+          myfile << 0 << " " << 0 << " " << 0 << " " << 0 << " " ;
+          myfile << -1  << " " ;
+        }
+      }
+      for(int j = 0; j < 8; j++){
+        for(int k = j; k < 8; k++){
+          if( j < jet_candidates.size() and k < jet_candidates.size() ){
+            TLorentzVector jet1 = jets_tlvs[ j ] ;
+            TLorentzVector jet2 = jets_tlvs[ k ] ;
+            myfile << TMath::Log( (jet1+jet2).M() + 1 ) << " " << jet1.DeltaR( jet2 ) << " " ;
+          } else myfile << 0 << " " << 0 << " ";
+        }
+      }
+
+      TLorentzVector lll;
+      if( muon_candidates.size() ) lll = make_muon(reader2, muon_candidates.at(0));
+      else                         lll = make_electron(reader1, electron_candidates.at(0));
+      TLorentzVector tl, nu, Wl;
+      if( muon_candidates.size() + electron_candidates.size() )
+        reconstruct_decay(80, lll, nu0, nu, Wl);
+
+      myfile << TMath::Log(nu0.Pt() + 1) << " " << nu0.Phi()/3.15 << " " << TMath::Log(lll.Pt() + 1) << " " << lll.Eta()/2.5 << " " << lll.Phi()/3.15 << " " << muon_candidates.size() << " " << electron_candidates.size() << " " << TMath::Log(Wl.Pt() + 1) << " " << Wl.Eta()/2.5 << " " << Wl.Phi()/3.15 << " " << TMath::Log(Wl.M() + 1) << " ";
+      myfile << endl;
+      // for csv ==========================================================
 
       vector<TLorentzVector> bb_combo;
       get_tlvs_candidates(bjets_tlvs, bb_combo);
@@ -492,6 +627,7 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "" 
 	}
 
   ofile->Write();
+  myfile.close();
 }
 
 

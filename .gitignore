@@ -43,3 +43,5 @@ Thumbs.db
 *.pdf
 *.png
 *.csv
+*.txt
+*.h5

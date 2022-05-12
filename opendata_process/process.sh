@@ -1,9 +1,18 @@
 
 file=/home/pmandrik/work/projects/XYH/SAMPLES/ttbar.root
+path_train=/home/pmandrik/work/projects/XYH/gitrepo/XYH/events_train
 
-root -l -b -q "process_delphes.cpp(\""$file"\",\"pd_file.root\")"
+
+root -l -b -q "process_delphes.cpp(\""$file"\",\"pd_file_900_MY_600.root\", \"\", \"csv_tbar.csv\" ,\"$path_train/eval2_ttbar_MX_900_MY_600.txt\")"
+root -l -b -q "process_delphes.cpp(\""$file"\",\"pd_file_1300_MY_475.root\", \"\", \"csv_tbar.csv\" ,\"$path_train/eval2_ttbar_MX_1300_MY_475.txt\")"
+root -l -b -q "process_delphes.cpp(\""$file"\",\"pd_file_1300_MY_975.root\", \"\", \"csv_tbar.csv\" ,\"$path_train/eval2_ttbar_MX_1300_MY_975.txt\")"
+root -l -b -q "process_delphes.cpp(\""$file"\",\"pd_file_1700_MY_475.root\", \"\", \"csv_tbar.csv\" ,\"$path_train/eval2_ttbar_MX_1700_MY_475.txt\")"
+root -l -b -q "process_delphes.cpp(\""$file"\",\"pd_file_1700_MY_1225.root\", \"\", \"csv_tbar.csv\" ,\"$path_train/eval2_ttbar_MX_1700_MY_1225.txt\")"
+root -l -b -q "process_delphes.cpp(\""$file"\",\"pd_file_1900_MY_475.root\", \"\", \"csv_tbar.csv\" ,\"$path_train/eval2_ttbar_MX_1900_MY_475.txt\")"
+root -l -b -q "process_delphes.cpp(\""$file"\",\"pd_file_1900_MY_1600.root\", \"\", \"csv_tbar.csv\" ,\"$path_train/eval2_ttbar_MX_1900_MY_1600.txt\")"
 
 exit
+root -l -b -q "process_delphes.cpp(\""$file"\",\"pd_file_650_MY_375.root\", \"\", \"csv_tbar.csv\" ,\"$path_train/eval2_ttbar_MX_650_MY_375.txt\")"
 
 root -l -b -q "make_interface_back.cpp(\""$file"\", \"myelectrons/Events\")"
 mv Events.C Events_myelectrons.C

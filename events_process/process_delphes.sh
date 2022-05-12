@@ -1,9 +1,11 @@
 path=/home/me/work/projects/XYZ/back/
 path=/home/pmandrik/work/projects/XYZ/back/
+path_train=/home/pmandrik/work/projects/XYH/gitrepo/XYH/events_train
 
 path=/home/pmandrik/work/projects/XYH/SAMPLES/signal/
 for folder in $path/NMSSM_*; do
 #for folder in $path/NMSSM_XYH_ttbb_MX_650_MY_375; do
+#for folder in $path/NMSSM_XYH_ttbb_MX_1900_MY_1600; do
   pname=`basename $folder` # run_01_decayed_1
   file=$folder/$pname"_t_l"/run_01_decayed_1/tag_1_delphes_events.root
   file_lhe=$folder/$pname"_t_l"/run_01_decayed_1/unweighted_events.lhe
@@ -25,7 +27,7 @@ for folder in $path/NMSSM_*; do
   root -l -b -q "make_interface.cpp(\""$file"\")"
   #root -l -b -q "process_delphes.cpp(\""$file"\",\"pd_"$pname".root\", \"$file_lhe\")"
   #root -l -b -q "matcher.cpp(\""$file"\",\""$file2"\",\"match_"$pname".root\", \"$oname0\", \"$oname1\")"
-  root -l -b -q "process_delphes.cpp(\""$file"\",\""$file2"\",\"pd_"$pname".root\", \"$oname0\", \"$oname1\",\"csv2_"$pname".csv\")"
+  root -l -b -q "process_delphes.cpp(\""$file"\",\""$file2"\",\"pd_"$pname".root\", \"$oname0\", \"$oname1\",\"csv2_"$pname".csv\",\"$path_train/eval2_"$pname".txt\")"
   #root -l -b -q "tree_to_csv.cpp(\""$file"\",\""$file2"\",\"match_"$pname".root\", \"csv_"$pname".csv\")"
 done
 exit

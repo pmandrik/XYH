@@ -13,15 +13,12 @@ def get_dataset( X, Y, max_rows ):
   return df1
 
 def pm_train():
-
   points = [(650, 375), (900, 600), (1300, 475), (1300, 975), (1700, 475), (1700, 1225), (1900, 475), (1900, 1600)]
-  # points = [ (650, 375) ]
-
   for point in points:
     datasets = []
     #for X, Y in points:
     #dt = get_dataset( point[0], point[1], 125000 )
-    dt = get_dataset( point[0], point[1], 3000 )
+    dt = get_dataset( point[0], point[1], 125000 )
     datasets += [ dt ]
 
     vars_y = []
@@ -37,15 +34,22 @@ def pm_train():
       vars_x += [ "JetPhi" + str(j) ]
       vars_x += [ "JetM" + str(j) ]
       vars_x += [ "JetBtag" + str(j) ]
+
+      for k in range(j, 8) :
+        vars_x += [ "Jet" + str(j) + "N" + str(k) + "_M"  ];
+        vars_x += [ "Jet" + str(j) + "N" + str(k) + "_dR" ];
+
     vars_x += [ "nuPt", "nuPhi", "lPt", "lEta", "lPhi", "Nmu", "Ne", "wlPt", "WlEta", "WlPhi", "WlM" ];
 
 
     df = datasets [ 0 ]
+    print( df )
     df=(df-df.min())/(df.max()-df.min()+0.000000001)
     x_features = df[ vars_x ]
     y_features = df[ vars_y ]
 
-    print( x_features )
+    data_x = x_features.to_numpy()
+    data_y = y_features.to_numpy()
 
     # xft = tf.convert_to_tensor( x_features )
     # yft = tf.convert_to_tensor( y_features )
@@ -54,9 +58,9 @@ def pm_train():
     #normalizer.adapt( x_features )
 
     model = keras.Sequential([
-      tf.keras.layers.InputLayer(input_shape=(len(vars_x),)),
-      keras.layers.Dense(units=2*len(vars_x), activation='relu'),
-      keras.layers.Dense(units=2*len(vars_x), activation='relu'),
+      # tf.keras.layers.InputLayer(input_shape=(len(vars_x),)),
+      keras.layers.Dense(units=2*len(vars_x), activation='linear', input_shape=(len(vars_x),) ),
+      keras.layers.Dense(units=5*len(vars_x), activation='relu'),
       keras.layers.Dense(units=len(vars_x), activation='relu'),
       keras.layers.Dense(units=3*len(vars_y), activation='relu'),
       keras.layers.Dense(units=3*len(vars_y), activation='relu'),
@@ -65,9 +69,8 @@ def pm_train():
     ])
     model.compile(optimizer='adam', loss="binary_crossentropy", metrics=["binary_crossentropy", "accuracy", "mse"])
 
-    BATCH_SIZE = 1
-    model.fit(x_features, y_features, epochs=5, steps_per_epoch=3000, batch_size=BATCH_SIZE)
-    model.save("model_" + str(point[0]) + "_" + str(point[1]))
+    model.fit(data_x, data_y, epochs=20)
+    model.save("model_" + str(point[0]) + "_" + str(point[1]) + ".h5", save_format='h5')
     print("\n--- --- --- --- --- --- --- --- ---\n")
 
 if __name__ == "__main__" : 

@@ -77,7 +77,7 @@ struct full_reco_events{
   }
 };
 
-void process_delphes( string file, string file_tbar, string ofile_name, string file_from_lhe_t = "", string file_from_lhe_tbar = "", string csvfile_name = "" ) {
+void process_delphes( string file, string file_tbar, string ofile_name, string file_from_lhe_t = "", string file_from_lhe_tbar = "", string csvfile_name = "", string input_train_name = "" ) {
   vector<string> delphes_files = { file,            file_tbar          } ;
   vector<string> lhe_files     = { file_from_lhe_t, file_from_lhe_tbar } ;
 
@@ -88,6 +88,11 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
   selections->Fill("Total_X_Weight", 0);
   selections->Fill("Selected", 0);
   selections->Fill("Selected_X_Weight", 0);
+
+  std::ifstream infile;
+  if( input_train_name.size() ){
+    infile = std::ifstream( input_train_name );
+  }
 
   TH1D * hist_N_bjets = new TH1D("N_bjets", "N_bjets", 20, 0, 10);
   TH1D * hist_N_ljets = new TH1D("N_ljets", "N_ljets", 20, 0, 10);
@@ -151,7 +156,15 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
   TH1D * hist_bqq_BM       = new TH1D("bqq_all_BM", "bqq_all_BM", 100, 0, 1000);
   TH1D * hist_qq_BM        = new TH1D("qq_all_BM", "qq_all_BM", 100, 0, 800);
 
+  TH1D * hist_blnu_eval = new TH1D("blnu_eval", "blnu_eval", 100, 0, 1000);
+  TH1D * hist_tt_eval   = new TH1D("tt_eval", "tt_eval", 200, 0, 3000);
+  TH1D * hist_HY_eval   = new TH1D("HY_eval", "HY_eval", 200, 0, 3000);
+  TH1D * hist_bb_eval   = new TH1D("bb_eval", "bb_eval", 100, 0, 800);
+  TH1D * hist_bqq_eval  = new TH1D("bqq_eval", "bqq_eval", 100, 0, 1000);
+
   TH1D * hist_Hb_match_dR  = new TH1D("Hb_match_dR", "Hb_match_dR", 100, 0, 3);
+
+  TH2D * hist_score_vs_hmass  = new TH2D("hist_score_vs_hmass", "hist_score_vs_hmass", 100,  0, 1, 100, 0, 250);
 
   std::ofstream myfile;
   myfile.open ( csvfile_name );
@@ -304,6 +317,28 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
 
       TLorentzVector nu0 = make_met(reader, 0);
 
+      string cluster;
+      double score_h_1, score_h_1t, score_h_2, score_h_2t, score_tq_1, score_tq_1t, score_tq_2, score_tq_2t, score_tq_3, score_tq_3t, score_tl_1, score_tl_1t;
+      int index_h_1, index_h_2, index_tq_1, index_tq_2, index_tq_3, index_tl_1;
+      if( input_train_name.size() ){
+        /*
+        0.33973044 0 H 2
+        0.32396072 0 H 1
+        0.6927199 1 tq 0
+        0.20426865 0 tq 3
+        0.16255765 0 tq 4
+        0.051923893 0 tl 5
+        */
+        infile >> score_h_1 >> score_h_1t >> cluster >> index_h_1;
+        infile >> score_h_2 >> score_h_2t >> cluster >> index_h_2;
+        infile >> score_tq_1 >> score_tq_1t >> cluster >> index_tq_1;
+        infile >> score_tq_2 >> score_tq_2t >> cluster >> index_tq_2;
+        infile >> score_tq_3 >> score_tq_3t >> cluster >> index_tq_3;
+        infile >> score_tl_1 >> score_tl_1t >> cluster >> index_tl_1;
+
+        // cout << score_h_1 << " " << score_h_1t << " " << cluster << " " << index_h_1 << " " << endl;
+      }
+
       // BASIC EVENT SELECTIONS ==============================================
       hist_N_bjets->Fill( bjet_candidates.size(), weight );
       hist_N_ljets->Fill( ljet_candidates.size(), weight );
@@ -335,7 +370,7 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
 
       get_tlvs_jets( reader, ljet_candidates, ljets_tlvs );
       get_tlvs_jets( reader, bjet_candidates, bjets_tlvs );
-      get_tlvs_jets( reader,  jet_candidates,  jets_tlvs );
+      get_tlvs_jets( reader, jet_candidates, jets_tlvs );
 
       vector<TLorentzVector> bb_combo;
       get_tlvs_candidates(bjets_tlvs, bb_combo);
@@ -398,6 +433,14 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
         bool has_H  = ( b_matchs[0] != -1 and b_matchs[1] != -1 );
         
         if( true ){
+          /*
+          if(score_h_1t){
+            if( index_h_1 != b_matchs[0] and index_h_1 != b_matchs[1] ) cout << entry << " " << index_h_1 << " " << b_matchs[0] << " " << b_matchs[1] << endl;
+          }
+          if(score_h_2t){
+            if( index_h_2 != b_matchs[0] and index_h_2 != b_matchs[1] ) cout << entry << " " << index_h_2 << " " << b_matchs[0] << " " << b_matchs[1] << endl;
+          }
+          */
 
           if( t_lepton ){
             b_tl = b_t_match;
@@ -449,7 +492,37 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
           myfile << TMath::Log( q_match.Pt() + 1) << " " << q_match.Eta()/2.5 << " " << q_match.Phi()/3.15 << " " << TMath::Log(q_match.M() + 1) << " " ;
           myfile << TMath::Log( qbar_match.Pt() + 1) << " " << qbar_match.Eta()/2.5 << " " << qbar_match.Phi()/3.15 << " " << TMath::Log(qbar_match.M() + 1) << endl;
         }
+      }
 
+      if( input_train_name.size() ){
+        //cout << index_h_1 << " " <<  index_h_2 << " " << index_tq_1 << " " << index_tq_2 << " " << index_tq_3 << " " << index_tl_1 << endl;
+        //cout << jets_tlvs.size() << endl;
+
+        TLorentzVector jet_h1 = jets_tlvs[ index_h_1 ];
+        TLorentzVector jet_h2 = jets_tlvs[ index_h_2 ];
+        TLorentzVector jet_tq1 = jets_tlvs[ index_tq_1 ];
+        TLorentzVector jet_tq2 = jets_tlvs[ index_tq_2 ];
+        TLorentzVector jet_tq3 = jets_tlvs[ index_tq_3 ];
+        TLorentzVector jet_tl1 = jets_tlvs[ index_tl_1 ];
+
+        hist_score_vs_hmass->Fill( score_h_1 + score_h_2, (jet_h1+jet_h2).M() );
+
+        TLorentzVector l, nu, Wl;
+        if( muon_candidates.size() ) l = make_muon(reader, muon_candidates.at(0));
+        else if( electron_candidates.size() ) l = make_electron(reader, electron_candidates.at(0));
+        reconstruct_decay(80, l, nu0, nu, Wl);
+
+        TLorentzVector H_eval = jet_h1 + jet_h2;
+        TLorentzVector tq_eval = jet_tq1 + jet_tq2 + jet_tq3;
+        TLorentzVector tl_eval = jet_tl1 + Wl;
+        TLorentzVector Y_eval = tq_eval + tl_eval;
+        TLorentzVector X_eval = H_eval + tq_eval + tl_eval;
+
+        hist_blnu_eval->Fill( tl_eval.M() , weight  );
+        hist_tt_eval->Fill( Y_eval.M() , weight  );
+        hist_HY_eval->Fill( X_eval.M() , weight  );
+        hist_bb_eval->Fill( H_eval.M() , weight  );
+        hist_bqq_eval->Fill( tq_eval.M() , weight  );
       }
 
       if( true and file_lhe ){
@@ -700,11 +773,11 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
       selections->Fill("Selected_X_Weight", weight);
       total_weight_sum += weight;
     }
-
-    myfile.close();
+    
     file->Close();
   }
 
+  myfile.close();
 	for(int i = 1; i < 100; ++i) {
 		double passed = selections->GetBinContent(i);
 		string label = selections->GetXaxis()->GetBinLabel(i);

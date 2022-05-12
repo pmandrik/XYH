@@ -48,10 +48,10 @@ void tree_to_csv( string file_t, string file_tbar, string file_matcher = "", str
   }
   myfile << "\n";
 
-  TFile * fmatcher = TFile::Open( file_matcher.c_str(), "READ" );
-  TTree * tmatcher = (TTree*)fmatcher->Get("out_tree");
+  //TFile * fmatcher = TFile::Open( file_matcher.c_str(), "READ" );
+  //TTree * tmatcher = (TTree*)fmatcher->Get("out_tree");
   UInt_t Jet_matches[ 30 ];
-  tmatcher->SetBranchAddress("JetMatches",&Jet_matches);
+  //tmatcher->SetBranchAddress("JetMatches",&Jet_matches);
 
   for(int i = 0; i < delphes_files.size(); i++){
     bool t_lepton = (i == 0);

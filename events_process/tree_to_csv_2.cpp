@@ -12,7 +12,7 @@
 // resonanses energy Y, X
 // 
 
-void tree_to_csv( string file_t, string file_tbar, string file_matcher = "", string ofile_name = "" ) {
+void tree_to_csv2( string file_t, string file_tbar, string file_matcher = "", string ofile_name = "" ) {
   vector<string> delphes_files = { file_t,            file_tbar          } ;
 
   std::ofstream myfile;
@@ -147,9 +147,11 @@ void tree_to_csv( string file_t, string file_tbar, string file_matcher = "", str
       get_tlvs_jets( reader,  jet_candidates,  jets_tlvs );
 
       for(int j = 0; j < 10; j++){
-          myfile << ((Jet_matches[j] == 1) || (Jet_matches[j] == 2)) << " ";
-          myfile << ((Jet_matches[j] == 5) || (Jet_matches[j] == 6) || ((Jet_matches[j] == 4) && t_lepton) || ((Jet_matches[j] == 3) && not t_lepton)) << " ";
-          myfile << (((Jet_matches[j] == 3) && t_lepton) || ((Jet_matches[j] == 4) && not t_lepton)) << " ";
+          int index = jet_candidates[j];
+
+          myfile << ((Jet_matches[index] == 1) || (Jet_matches[index] == 2)) << " ";
+          myfile << ((Jet_matches[index] == 5) || (Jet_matches[index] == 6) || ((Jet_matches[index] == 4) && t_lepton) || ((Jet_matches[index] == 3) && not t_lepton)) << " ";
+          myfile << (((Jet_matches[index] == 3) && t_lepton) || ((Jet_matches[index] == 4) && not t_lepton)) << " ";
 
           // header.push_back( "JetMatch" + to_string(j) + "_H" );
           // header.push_back( "JetMatch" + to_string(j) + "_tq" );
