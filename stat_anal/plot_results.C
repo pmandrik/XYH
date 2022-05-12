@@ -7,6 +7,8 @@ double get_br( double value ){
   float BR_H_bb    = 5.824E-01; // https://twiki.cern.ch/twiki/bin/view/LHCPhysics/CERNYellowReportPageBR
   float BR_H_ttbar = 4./9.;
 
+  // 225.816 * 4./9. * 5.824E-01
+
   return xsec_Br / BR_H_bb / BR_H_ttbar;
 }
 
@@ -56,7 +58,7 @@ void plot_results(){
     string path_signal = "/home/pmandrik/work/projects/XYH/gitrepo/XYH/events_process/" ;
 
     vector< pair<int, int> > mass_points = { 
-      // pair<int, int>(650,375), 
+      pair<int, int>(650,375), 
       pair<int, int>( 900, 600),
       pair<int, int>(1300, 475),
       pair<int, int>(1300, 975),
