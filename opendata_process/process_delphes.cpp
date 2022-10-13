@@ -4,6 +4,7 @@
 #include "Events_myjets.C"
 #include "Events_mymets.C"
 #include "Events_mymuons.C"
+#include "Events_mygenparticles.C"
 
 #include "Delphes_help_func.C"
 
@@ -81,7 +82,7 @@ struct full_reco_events{
   }
 };
 
-void process_delphes( string file, string ofile_name, string file_from_lhe = "", string scv_file_name = "", string input_train_name = "" ) {
+void process_delphes( string file, string ofile_name, string file_from_lhe = "", string scv_file_name = "", string input_train_name = "", string cat_cut = "" ) {
   vector<string> delphes_files = { file };
 
   // for csv ==========================================================
@@ -146,8 +147,8 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "",
 
   TH1D * hist_nul_all   = new TH1D("nul_all", "nul_all", 100, 0, 500);
   TH1D * hist_blnu_all  = new TH1D("blnu_all", "blnu_all", 100, 0, 1000);
-  TH1D * hist_tt_all    = new TH1D("tt_all", "tt_all", 200, 0, 3000);
-  TH1D * hist_HY_all    = new TH1D("HY_all", "HY_all", 200, 0, 3000);
+  TH1D * hist_tt_all    = new TH1D("tt_all", "tt_all", 500, 0, 5000);
+  TH1D * hist_HY_all    = new TH1D("HY_all", "HY_all", 500, 0, 5000);
 
   // lhe vs reco
   TH1D * hist_Hb_dR     = new TH1D("lhe_Hb_dR_all", "lhe_Hb_dR_all", 100, 0, 10);
@@ -188,15 +189,15 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "",
 
   TH1D * hist_nul_BM       = new TH1D("nul_all_BM", "nul_all_BM", 100, 0, 500);
   TH1D * hist_blnu_BM      = new TH1D("blnu_all_BM", "blnu_all_BM", 100, 0, 1000);
-  TH1D * hist_tt_BM        = new TH1D("tt_all_BM", "tt_all_BM", 200, 0, 3000);
-  TH1D * hist_HY_BM        = new TH1D("HY_all_BM", "HY_all_BM", 200, 0, 3000);
+  TH1D * hist_tt_BM        = new TH1D("tt_all_BM", "tt_all_BM", 500, 0, 5000);
+  TH1D * hist_HY_BM        = new TH1D("HY_all_BM", "HY_all_BM", 500, 0, 5000);
   TH1D * hist_bb_BMl       = new TH1D("bb_al_BMl", "bb_all_BM", 100, 0, 800);
   TH1D * hist_bqq_BM       = new TH1D("bqq_all_BM", "bqq_all_BM", 100, 0, 1000);
   TH1D * hist_qq_BM        = new TH1D("qq_all_BM", "qq_all_BM", 100, 0, 800);
 
   TH1D * hist_blnu_eval = new TH1D("blnu_eval", "blnu_eval", 100, 0, 1000);
-  TH1D * hist_tt_eval   = new TH1D("tt_eval", "tt_eval", 200, 0, 3000);
-  TH1D * hist_HY_eval   = new TH1D("HY_eval", "HY_eval", 200, 0, 3000);
+  TH1D * hist_tt_eval   = new TH1D("tt_eval", "tt_eval", 500, 0, 5000);
+  TH1D * hist_HY_eval   = new TH1D("HY_eval", "HY_eval", 500, 0, 5000);
   TH1D * hist_bb_eval   = new TH1D("bb_eval", "bb_eval", 100, 0, 800);
   TH1D * hist_bqq_eval  = new TH1D("bqq_eval", "bqq_eval", 100, 0, 1000);
 
@@ -210,7 +211,7 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "",
   TTree * tree1 = (TTree*) file1->Get("myelectrons/Events");
   int n1 = tree1->GetEntries();
   file1->Close();
-  float weight_1 = 1. / n1;
+  float weight_1 = 1;
 
   vector< vector< vector<int> > > b_groups;
   create_groups_from_unic_sample( {2, 1, 1}, b_groups, true );
@@ -224,10 +225,15 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "",
     TTree * tree2 = (TTree*) file->Get("mymuons/Events");
     TTree * tree3 = (TTree*) file->Get("mymets/Events");
     TTree * tree4 = (TTree*) file->Get("myjets/Events");
+    TTree * tree5 = (TTree*) file->Get("mygenparticle/Events");
+
     Events_myelectrons * reader1 = new Events_myelectrons( tree1 );
     Events_mymuons     * reader2 = new Events_mymuons( tree2 );
     Events_mymets      * reader3 = new Events_mymets( tree3 );
     Events_myjets      * reader4 = new Events_myjets( tree4 );
+    Events_mygenparticles * reader5 = nullptr;
+    if( tree5 ) reader5 = new Events_mygenparticles( tree5 );
+    else { cout << "NO mygenparticles/Events !!!!!!!!!!" << endl; }
 
     Long64_t entrys = tree1->GetEntries();
     Long64_t entry = 0;
@@ -235,13 +241,18 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "",
       if( not (entry % 10000) )
         cout << entry << "/" << entrys << endl;
 
-      // if( entry > 10000 ) break;
+      // if( entry > 100000 ) break;
 
       file->cd();
       reader1->GetEntry(entry);
       reader2->GetEntry(entry);
       reader3->GetEntry(entry);
       reader4->GetEntry(entry);
+      if( reader5 ) reader5->GetEntry(entry);
+
+      string cat = "";
+      if( reader5 ) cat = get_cat( reader5 );
+      if( cat.size() and cat != cat_cut ) continue;
 
       selections->Fill("Total", 1);
 
@@ -298,8 +309,10 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "",
       vector<int> ljet_candidates;
       vector<int> bjet_candidates;
       for(auto i : jet_candidates){
+        // to cal efficiency use = 622466. / (833.9 * 35.9 * 1000)
         // https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation74X50ns
-        if( reader4->jet_btag->at(i) <  0.605 ) ljet_candidates.push_back(i);
+        if( reader4->jet_btag->at(i) <  0.605 ) ljet_candidates.push_back(i); // DEFAULT ONE
+        // if( reader4->jet_btag->at(i) <  0.890 ) ljet_candidates.push_back(i);
         else bjet_candidates.push_back(i);
       }
 
@@ -609,9 +622,14 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "",
         hist_bqq_BM->Fill( best_event.tq.M() , weight  );
         hist_qq_BM->Fill( best_event.Wq.M() , weight  );
 
-      // DONE !!! 
+      // DONE !!!
+
       selections->Fill("Selected", 1);
       selections->Fill("Selected_X_Weight", weight);
+
+      // cout << "!!!" << cat << endl;
+      selections->Fill( ("ttbar-" + cat).c_str(), 1);
+      //selections->Fill("!!!", 1);
       total_weight_sum += weight;
     }
 

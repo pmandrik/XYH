@@ -382,11 +382,117 @@ vector< pair<int,int> > get_XY_mass(string type){
   return XY_mass;
 }
 
+// ================================================================== ================================================================== ==================================================================
 
+TLorentzVector make_particle(Events_mygenparticles * reader, int index){
+  TLorentzVector vec;
+  vec.SetPtEtaPhiM( reader->GenPart_pt->at(index), reader->GenPart_eta->at(index), reader->GenPart_phi->at(index), reader->GenPart_mass->at(index) );
+  return vec;
+}
 
+struct particle{
+  int id = -1;
+  int from_tt = 0;
+  TLorentzVector tlv;
+};
 
+string get_cat( Events_mygenparticles * reader5 ){
+      //cout << "======================" << endl;
+      map<string, int> parts;
+      parts["b"] = 0; 
+      parts["c"] = 0;
+      parts["l"] = 0; 
 
+      particle wgen1, wgen2;
+      vector<particle> gens;
 
+        for(int i = 0; i < reader5->numGenPart; i++){
+          //if( reader5->GenPart_pdgId->at(i) == -5 or reader5->GenPart_pdgId->at(i) == 5 ){
+          //  cout << i << " " << reader5->GenPart_pdgId->at(i) << " " << reader5->GenPart_status->at(i) << " " << reader5->GenPart_pt->at(i) << endl;
+          //}
+
+          // if( reader5->GenPart_pt->at(i) < 25 ) continue;
+          if( reader5->GenPart_pt->at(i) < 30 ) continue;
+          if( TMath::Abs(reader5->GenPart_eta->at(i)) > 2.4 ) continue;
+
+          if( abs(reader5->GenPart_pdgId->at(i)) == 10000+5 ) continue;
+          if( abs(reader5->GenPart_pdgId->at(i)) == 10000-5 ) continue;
+
+          if( abs( reader5->GenPart_pdgId->at(i)) == 6   ) continue;
+          if( abs( reader5->GenPart_pdgId->at(i)) == 24  ){
+            if( wgen1.id == -1 ){
+              wgen1.id = i;
+              wgen1.tlv = make_particle(reader5, i);
+            } else {
+              wgen2.id = i;
+              wgen2.tlv = make_particle(reader5, i);
+            }
+          } else {
+            particle p;
+            p.id = i;
+            p.tlv = make_particle(reader5, i);
+            gens.push_back( p );
+          }
+        }
+
+        float dm_best = 9999990;
+        pair<int, int> best_indexes;
+
+        for(int i = 0; i < gens.size(); ++i){
+          for(int j = i+1; j < gens.size(); ++j){
+            float dm = abs( wgen1.tlv.M() - (gens[i].tlv + gens[j].tlv).M() );
+            if( dm_best < dm ) continue;
+            dm_best = dm;
+            best_indexes = make_pair(i, j);
+          }
+        }
+
+        if( dm_best < 0.1 ){
+          gens[best_indexes.first].from_tt = 1;
+          gens[best_indexes.second].from_tt = 1;
+          /// cout << dm_best << " " << gens[best_indexes.first].id << " " << gens[best_indexes.second].id << " " << wgen1.tlv.M()  << endl;
+        }
+
+        dm_best = 9999990;
+        for(int i = 0; i < gens.size(); ++i){
+          for(int j = i+1; j < gens.size(); ++j){
+            if( gens[i].from_tt ) continue;
+            if( gens[j].from_tt ) continue;
+
+            float dm = abs( wgen2.tlv.M() - (gens[i].tlv + gens[j].tlv).M() );
+            if( dm_best < dm ) continue;
+            dm_best = dm;
+            best_indexes = make_pair(i, j);
+          }
+        }
+
+        if( dm_best < 0.1 ){
+          gens[best_indexes.first].from_tt = 1;
+          gens[best_indexes.second].from_tt = 1;
+          /// cout << dm_best << " " << gens[best_indexes.first].id << " " << gens[best_indexes.second].id << " " << wgen2.tlv.M()  << endl;
+        }
+
+        for(int i = 0; i < gens.size(); ++i){
+            if( gens[i].from_tt ) continue;
+
+            int id = gens[i].id;
+            if( abs( reader5->GenPart_pdgId->at(id)) == 5   ) parts["b"] += 1;
+            if( abs( reader5->GenPart_pdgId->at(id)) == 4   ) parts["c"] += 1;
+            if( abs( reader5->GenPart_pdgId->at(id)) < 4   )  parts["l"] += 1;
+        }
+
+     // for(auto it : parts){
+      //  cout << it.first << " " << it.second << endl;
+     // }
+
+      string cat = "";
+      if( parts["l"] > 0 ) cat = "lf";
+      if( parts["c"] > 0 ) cat = "hf";
+      if( parts["b"] > 0 ) cat = "hf";
+      if( parts["b"] > 1 ) cat = "hf";
+      // cout << cat << endl;
+      return cat;
+}
 
 
 

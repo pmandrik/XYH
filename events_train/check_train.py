@@ -27,6 +27,14 @@ def get_dataset_back( X, Y, max_rows ):
   df1 = pd.read_csv( path + file , sep=",", nrows=max_rows)
   return df1
 
+def get_dataset_back_ttH( X, Y, max_rows ):
+  path = "/home/pmandrik/work/projects/XYH/gitrepo/XYH/events_process/"
+  path = "./"
+  file = "csvOUT2_ttH_MX_" + str(X) + "_MY_" + str(Y) + ".csv"
+
+  df1 = pd.read_csv( path + file , sep=",", nrows=max_rows)
+  return df1
+
 def pm_train():
   do_print = False
   if True:
@@ -34,8 +42,9 @@ def pm_train():
     for point in points:
       rate_array = []
       all_jets_event = 0
-      f = open("eval2_ttbar_MX_" + str(point[0]) + "_MY_" + str(point[1]) + ".txt", "w")
-      df = get_dataset_back( point[0], point[1], 9999999999 )
+      # f = open("eval2_ttbar_MX_" + str(point[0]) + "_MY_" + str(point[1]) + ".txt", "w")
+      f = open("eval2_ttH_MX_" + str(point[0]) + "_MY_" + str(point[1]) + ".txt", "w")
+      df = get_dataset_back_ttH( point[0], point[1], 9999999999 )
       vars_y1 = []
       vars_y2 = []
 

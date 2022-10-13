@@ -18,12 +18,14 @@ def save_dataset( X, Y, df ):
 
 def save_dataset_back( X, Y, df ):
   file = "csvOUT2_ttbar_MX_" + str(X) + "_MY_" + str(Y) + ".csv"
+  file = "csvOUT2_ttH_MX_" + str(X) + "_MY_" + str(Y) + ".csv"
   df.to_csv( file )
 
 def pm_train():
 
   if True:
     path = "/home/pmandrik/work/projects/XYH/gitrepo/XYH/opendata_process/csv_tbar.csv"
+    path = "/home/pmandrik/work/projects/XYH/gitrepo/XYH/opendata_process/csv_ttH.csv"
 
     vars_y = []
     vars_x = []
