@@ -485,8 +485,8 @@ string get_cat( Events_mygenparticles * reader5 ){
       //  cout << it.first << " " << it.second << endl;
      // }
 
-      string cat = "";
-      if( parts["l"] > 0 ) cat = "lf";
+      string cat = "lf";
+      // if( parts["l"] > 0 ) cat = "lf";
       if( parts["c"] > 0 ) cat = "hf";
       if( parts["b"] > 0 ) cat = "hf";
       if( parts["b"] > 1 ) cat = "hf";

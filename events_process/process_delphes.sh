@@ -24,10 +24,13 @@ for folder in $path/NMSSM_*; do
     root -l -b -q 'lhe_to_root.cpp("'$file_lhe2'","'$pname'","tbar_l", "'$oname1'")'
   fi
 
+  mass="${pname:0-3}"
+  echo $mass
+
   root -l -b -q "make_interface.cpp(\""$file"\")"
   #root -l -b -q "process_delphes.cpp(\""$file"\",\"pd_"$pname".root\", \"$file_lhe\")"
   #root -l -b -q "matcher.cpp(\""$file"\",\""$file2"\",\"match_"$pname".root\", \"$oname0\", \"$oname1\")"
-  root -l -b -q "process_delphes.cpp(\""$file"\",\""$file2"\",\"pd_"$pname".root\", \"$oname0\", \"$oname1\",\"csv2_"$pname".csv\",\"$path_train/eval2_"$pname".txt\")"
+  root -l -b -q "process_delphes.cpp(\""$file"\",\""$file2"\",\"pd_"$pname".root\", \"$oname0\", \"$oname1\",\"csv2_"$pname".csv\",\"$path_train/eval2_"$pname".txt\", $mass)"
   #root -l -b -q "tree_to_csv.cpp(\""$file"\",\""$file2"\",\"match_"$pname".root\", \"csv_"$pname".csv\")"
 done
 exit

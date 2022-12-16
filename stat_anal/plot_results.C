@@ -1,6 +1,7 @@
 
 double get_br( double value ){
   float L = 137; // 137 fb − 1
+        //L = 3000; // 137 fb − 1
   int n_existed = 20000;
   float xsec_Br = value * n_existed / L; // 20000 / (138 * 1000) = 0.14492753623188406
 
@@ -50,8 +51,8 @@ vector<double> get_trex_limit(string path){
   return answer;
 }
 
-#include "/home/pmandrik/work/PMANDRIK_LIBRARY/pmlib_root_hist_drawer.hh"
-using namespace pm;
+//#include "/home/pmandrik/work/PMANDRIK_LIBRARY/pmlib_root_hist_drawer.hh"
+//using namespace pm;
 
 void plot_results(){
   if( true ){
@@ -76,9 +77,16 @@ void plot_results(){
     for(auto point : mass_points){
       cout << endl;
       get_trex_limit("results_cuts/resultspd_NMSSM_XYH_ttbb_MX_" + to_string(point.first) + "_MY_" + to_string(point.second) + "_15_1.root");
-      points[ point ] = get_trex_limit("results_eval/resultspd_NMSSM_XYH_ttbb_MX_" + to_string(point.first) + "_MY_" + to_string(point.second) + "eval_35_1.root");
+      // points[ point ] = get_trex_limit("results_eval2/resultspd_NMSSM_XYH_ttbb_MX_" + to_string(point.first) + "_MY_" + to_string(point.second) + "eval_35_1.root");
+      points[ point ] = get_trex_limit("results_14TEV/resultspd_NMSSM_XYH_ttbb_MX_" + to_string(point.first) + "_MY_" + to_string(point.second) + "eval_35_1.root");
     }
 
+    for(auto point : mass_points){
+      vector<double> vals = points.find( point )->second;
+      cout << "(" + to_string(point.first) + ", " + to_string(point.second) + ") " << vals[0] << " " << vals[1] << " " << vals[2] << " " << vals[3] << " " << vals[4] << " " << 0 << endl;
+    }
+
+/*
     BrasilDrawer bd0;
     bd0.style = new CanvasStyle();
     bd0.label_y = "#sigma#times Br(X#rightarrow Y H)#times Br(Y #rightarrow tt), [fb]";
@@ -97,9 +105,9 @@ void plot_results(){
     //TH1D * extra_hist = bd0.GetHist( "no sys", no_sys );
     //extra_hist->SetLineColor(2);
     // extra_hist->Draw("same hist");
-    canv->Print("limits_plot_eval.pdf");
+    canv->Print("limits_plot_eval2.pdf");
+*/
   }
-
 }
 
 

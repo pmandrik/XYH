@@ -60,9 +60,9 @@ map<int,int> match_multiple( vector<TLorentzVector> v1, vector<TLorentzVector> v
 };
 
 double calc_metric(TLorentzVector Wl, TLorentzVector tl, TLorentzVector Wq, TLorentzVector tq, TLorentzVector H){
-  double val  = TMath::Power((Wl.M() - 80)/80, 2) + TMath::Power((Wq.M() - 80)/80, 2);
-         val += TMath::Power((tl.M() - 174)/174, 2) + TMath::Power((tl.M() - 174)/174, 2);
-         val += TMath::Power((H.M() - 125)/125, 2);
+  double val  = TMath::Power((Wl.M() - 80)/20, 2) + TMath::Power((Wq.M() - 80)/32, 2);
+         val += TMath::Power((tl.M() - 174)/38, 2) + TMath::Power((tq.M() - 174)/31, 2);
+         val += TMath::Power((H.M() - 125)/46, 2);
   return val; 
 };
 
@@ -82,7 +82,7 @@ struct full_reco_events{
   }
 };
 
-void process_delphes( string file, string ofile_name, string file_from_lhe = "", string scv_file_name = "", string input_train_name = "", string cat_cut = "" ) {
+void process_delphes( string file, string ofile_name, string file_from_lhe = "", string scv_file_name = "", string input_train_name = "", string cat_cut = "", int Y_true_mass = 0 ) {
   vector<string> delphes_files = { file };
 
   // for csv ==========================================================
@@ -128,6 +128,7 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "",
   TFile * ofile = TFile::Open( ofile_name.c_str(), "RECREATE" );
   TH1D * selections = new TH1D("selections", "selections", 100, 0, 100);
   TH1D * selections_nice = new TH1D("selections_nice", "selections_nice", 100, 0, 100);
+  TH1D * selections_nice2 = new TH1D("selections_nice2", "selections_nice2", 100, 0, 100);
   selections->Fill("Total", 0);
   selections->Fill("Total_X_Weight", 0);
   selections->Fill("Selected", 0);
@@ -201,6 +202,8 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "",
   TH1D * hist_bb_eval   = new TH1D("bb_eval", "bb_eval", 100, 0, 800);
   TH1D * hist_bqq_eval  = new TH1D("bqq_eval", "bqq_eval", 100, 0, 1000);
 
+  TH1D * hist_HY_eval_fnal  = new TH1D("HY_eval_fnal", "HY_eval_fnal", 500, 0, 5000);
+
   TH2D * hist_score_vs_hmass  = new TH2D("hist_score_vs_hmass", "hist_score_vs_hmass", 100,  0, 1, 100, 0, 250);
 
   Long64_t total_entrys = 0;
@@ -241,7 +244,7 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "",
       if( not (entry % 10000) )
         cout << entry << "/" << entrys << endl;
 
-      // if( entry > 100000 ) break;
+      if( entry > 1000000 ) break;
 
       file->cd();
       reader1->GetEntry(entry);
@@ -252,7 +255,14 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "",
 
       string cat = "";
       if( reader5 ) cat = get_cat( reader5 );
-      if( cat.size() and cat != cat_cut ) continue;
+      selections->Fill( ("Total_" + cat).c_str(), 1 );
+      
+      // 1.609 * 1000000 lf
+      // 939250 hf
+      // 939250 / (1.395 * 1000000 + 1.609 * 1000000 + 939250) tot
+      // 3943779 = 
+
+      if( cat_cut.size() and cat != cat_cut ) continue;
 
       selections->Fill("Total", 1);
 
@@ -395,6 +405,21 @@ void process_delphes( string file, string ofile_name, string file_from_lhe = "",
         hist_HY_eval->Fill( X_eval.M() , weight  );
         hist_bb_eval->Fill( H_eval.M() , weight  );
         hist_bqq_eval->Fill( tq_eval.M() , weight  );
+
+        if( tl_eval.M() > 135 ){
+        selections->Fill("tl_eval.M() < 135", weight);
+        selections_nice2->Fill("tl_eval.M() < 135", weight);
+
+        if( H_eval.M() > 95 ){
+        selections->Fill("H_eval.M() < 95", weight);
+        selections_nice2->Fill("H_eval.M() < 95", weight);
+
+        if( Y_eval.M() > 0.5*Y_true_mass ){
+        selections->Fill("Y_eval.M() < 0.5*Y_true_mass", weight);
+        selections_nice2->Fill("H_eval.M() < 0.5*Y_true_mass", weight);
+
+        hist_HY_eval_fnal->Fill( X_eval.M() , weight  );
+        }}}
       }
 
       for(int j = 0; j < 8; j++){

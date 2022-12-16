@@ -10,7 +10,7 @@ workdir=/afs/cern.ch/work/p/pmandrik/fcc_100TeV/7_limits/H
 
 do_hists(){
   bdt_name=$1"_"$2"_"$3
-  root -l -b -q "../make_hists.C(\"$1\", \".\", $2, $3, true)"
+  root -l -b -q "make_hists.C(\"$1\", \".\", $2, $3, true)"
 }
 
 do_fit(){

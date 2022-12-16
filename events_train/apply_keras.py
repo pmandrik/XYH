@@ -23,7 +23,7 @@ def save_dataset_back( X, Y, df ):
 
 def pm_train():
 
-  if True:
+  if False:
     path = "/home/pmandrik/work/projects/XYH/gitrepo/XYH/opendata_process/csv_tbar.csv"
     path = "/home/pmandrik/work/projects/XYH/gitrepo/XYH/opendata_process/csv_ttH.csv"
 
@@ -73,7 +73,7 @@ def pm_train():
         df[ "JetPred" + str(j) + "_tq" ] = y_predict[:,j*3+1]
         df[ "JetPred" + str(j) + "_tl" ] = y_predict[:,j*3+2]
 
-      save_dataset_back( point[0], point[1], df )
+      # save_dataset_back( point[0], point[1], df )
 
     return
 
@@ -82,7 +82,8 @@ def pm_train():
   for point in points:
     datasets = []
     #for X, Y in points:
-    dt = get_dataset( point[0], point[1], 999900 )
+    #dt = get_dataset( point[0], point[1], 999900 )
+    dt = get_dataset( point[0], point[1], 99 )
     datasets += [ dt ]
 
     vars_y = []
@@ -121,6 +122,22 @@ def pm_train():
 
     model = tf.keras.models.load_model("model_" + str(point[0]) + "_" + str(point[1]) + ".h5")
 
+    if True:
+      from keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
+      import eli5
+      from eli5.sklearn import PermutationImportance
+
+      def base_model():
+        return model
+
+      my_model = KerasRegressor(build_fn=base_model, **sk_params)    
+      my_model.fit(x_features,y)
+
+      perm = PermutationImportance(my_model, random_state=1).fit(x_features,y)
+      eli5.show_weights(perm, feature_names = X.columns.tolist())
+      input()
+      exit()
+
     y_predict = model.predict( x_features )
 
     for i in range( 10 ):
@@ -136,7 +153,7 @@ def pm_train():
       df[ "JetPred" + str(j) + "_tq" ] = y_predict[:,j*3+1]
       df[ "JetPred" + str(j) + "_tl" ] = y_predict[:,j*3+2]
 
-    save_dataset( point[0], point[1], df )
+    # save_dataset( point[0], point[1], df )
 
 if __name__ == "__main__" : 
   pm_train() 

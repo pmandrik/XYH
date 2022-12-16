@@ -55,15 +55,30 @@ map<int,int> match_multiple( vector<TLorentzVector> v1, vector<TLorentzVector> v
 };
 
 double calc_metric(TLorentzVector Wl, TLorentzVector tl, TLorentzVector Wq, TLorentzVector tq, TLorentzVector H){
+  /*
   double val  = TMath::Power((Wl.M() - 80)/80, 2) + TMath::Power((Wq.M() - 80)/80, 2);
-         val += TMath::Power((tl.M() - 174)/174, 2) + TMath::Power((tl.M() - 174)/174, 2);
+         val += TMath::Power((tl.M() - 174)/174, 2) + TMath::Power((tq.M() - 174)/174, 2);
          val += TMath::Power((H.M() - 125)/125, 2);
+  */
+  double val  = TMath::Power((Wl.M() - 80)/20, 2) + TMath::Power((Wq.M() - 80)/32, 2);
+         val += TMath::Power((tl.M() - 174)/38, 2) + TMath::Power((tq.M() - 174)/31, 2);
+         val += TMath::Power((H.M() - 125)/46, 2);
   return val; 
 };
 
 struct full_reco_events{
   double metric;
   TLorentzVector Wl, tl, Wq, tq, H, Y, X;
+  int index_q1, index_q2, index_hb1, index_hb2, index_t1b, index_t2b;
+
+  void set_jet_indexes(int index_q1_,int index_q2_,int index_hb1_,int index_hb2_,int index_t1b_,int index_t2b_){
+    index_q1  = index_q1_;
+    index_q2  = index_q2_;
+    index_hb1 = index_hb1_;
+    index_hb2 = index_hb2_;
+    index_t1b = index_t1b_;
+    index_t2b = index_t2b_;
+  }
 
   void set(double metric_, TLorentzVector Wl_, TLorentzVector tl_, TLorentzVector Wq_, TLorentzVector tq_, TLorentzVector H_, TLorentzVector Y_, TLorentzVector X_){
     metric = metric_;
@@ -77,13 +92,14 @@ struct full_reco_events{
   }
 };
 
-void process_delphes( string file, string file_tbar, string ofile_name, string file_from_lhe_t = "", string file_from_lhe_tbar = "", string csvfile_name = "", string input_train_name = "" ) {
+void process_delphes( string file, string file_tbar, string ofile_name, string file_from_lhe_t = "", string file_from_lhe_tbar = "", string csvfile_name = "", string input_train_name = "", int Y_true_mass = 0 ) {
   vector<string> delphes_files = { file,            file_tbar          } ;
   vector<string> lhe_files     = { file_from_lhe_t, file_from_lhe_tbar } ;
 
   TFile * ofile = TFile::Open( ofile_name.c_str(), "RECREATE" );
   TH1D * selections = new TH1D("selections", "selections", 100, 0, 100);
   TH1D * selections_nice = new TH1D("selections_nice", "selections_nice", 100, 0, 100);
+  TH1D * selections_nice2 = new TH1D("selections_nice2", "selections_nice2", 100, 0, 100);
   selections->Fill("Total", 0);
   selections->Fill("Total_X_Weight", 0);
   selections->Fill("Selected", 0);
@@ -108,8 +124,8 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
 
   TH1D * hist_nul_all   = new TH1D("nul_all", "nul_all", 100, 0, 500);
   TH1D * hist_blnu_all  = new TH1D("blnu_all", "blnu_all", 100, 0, 1000);
-  TH1D * hist_tt_all    = new TH1D("tt_all", "tt_all", 200, 0, 3000);
-  TH1D * hist_HY_all    = new TH1D("HY_all", "HY_all", 200, 0, 3000);
+  TH1D * hist_tt_all    = new TH1D("tt_all", "tt_all", 500, 0, 5000);
+  TH1D * hist_HY_all    = new TH1D("HY_all", "HY_all", 500, 0, 5000);
 
   // lhe vs reco
   TH1D * hist_Hb_dR     = new TH1D("lhe_Hb_dR_all", "lhe_Hb_dR_all", 100, 0, 10);
@@ -139,8 +155,8 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
   TH2D * hist_bqq_dR_x_m  = new TH2D("hist_bqq_dR_x_m", "hist_bqq_dR_x_m", 100,  0, 10, 100, 0, 250);
 
   TH1D * hist_bb_match = new TH1D("hist_bb_match", "hist_bb_match", 100, 0, 800);
-  TH1D * hist_qqb_match = new TH1D("hist_qbb_match", "hist_qbb_match", 100, 0, 800);
-  TH1D * hist_qqbar_match = new TH1D("hist_qbbar_match", "hist_qbbar_match", 100, 0, 1000);
+  TH1D * hist_qqb_match = new TH1D("hist_qqb_match", "hist_qqb_match", 100, 0, 800);
+  TH1D * hist_qqbar_match = new TH1D("hist_qqbbar_match", "hist_qqbbar_match", 100, 0, 1000);
   TH1D * hist_qq_match    = new TH1D("hist_qq_match", "hist_qq_match", 100, 0, 800);
 
   TH1D * hist_wl_match = new TH1D("hist_wl_match", "hist_wl_match", 100, 0, 200);
@@ -150,17 +166,19 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
 
   TH1D * hist_nul_BM       = new TH1D("nul_all_BM", "nul_all_BM", 100, 0, 500);
   TH1D * hist_blnu_BM      = new TH1D("blnu_all_BM", "blnu_all_BM", 100, 0, 1000);
-  TH1D * hist_tt_BM        = new TH1D("tt_all_BM", "tt_all_BM", 200, 0, 3000);
-  TH1D * hist_HY_BM        = new TH1D("HY_all_BM", "HY_all_BM", 200, 0, 3000);
+  TH1D * hist_tt_BM        = new TH1D("tt_all_BM", "tt_all_BM", 500, 0, 5000);
+  TH1D * hist_HY_BM        = new TH1D("HY_all_BM", "HY_all_BM", 500, 0, 5000);
   TH1D * hist_bb_BMl       = new TH1D("bb_al_BMl", "bb_all_BM", 100, 0, 800);
   TH1D * hist_bqq_BM       = new TH1D("bqq_all_BM", "bqq_all_BM", 100, 0, 1000);
   TH1D * hist_qq_BM        = new TH1D("qq_all_BM", "qq_all_BM", 100, 0, 800);
 
   TH1D * hist_blnu_eval = new TH1D("blnu_eval", "blnu_eval", 100, 0, 1000);
-  TH1D * hist_tt_eval   = new TH1D("tt_eval", "tt_eval", 200, 0, 3000);
-  TH1D * hist_HY_eval   = new TH1D("HY_eval", "HY_eval", 200, 0, 3000);
+  TH1D * hist_tt_eval   = new TH1D("tt_eval", "tt_eval", 500, 0, 5000);
+  TH1D * hist_HY_eval   = new TH1D("HY_eval", "HY_eval", 500, 0, 5000);
   TH1D * hist_bb_eval   = new TH1D("bb_eval", "bb_eval", 100, 0, 800);
   TH1D * hist_bqq_eval  = new TH1D("bqq_eval", "bqq_eval", 100, 0, 1000);
+
+  TH1D * hist_HY_eval_fnal  = new TH1D("HY_eval_fnal", "HY_eval_fnal", 500, 0, 5000);
 
   TH1D * hist_Hb_match_dR  = new TH1D("Hb_match_dR", "Hb_match_dR", 100, 0, 3);
 
@@ -187,6 +205,11 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
   Long64_t total_entrys = 0;
   float weight = 1;
   float total_weight_sum = 1;
+  int selected_matchin = 0;
+  float total_matching_score = 0;
+  float frac_matching_score = 0;
+  float sum_matching_score = 0;
+  
 
   vector< vector< vector<int> > > b_groups;
   create_groups_from_unic_sample( {2, 1, 1}, b_groups, true );
@@ -206,6 +229,7 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
   float weight_2 = 0.5 / n2;
   vector<float> weights = { weight_1, weight_2 };
   cout << n1 << " " << n2 << " " << weight_1 << " " << weight_2 << endl;
+  int selected = 0;
 
   for(int i = 0; i < delphes_files.size(); i++){
     float weight = weights.at( i );
@@ -380,6 +404,7 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
 
       // cout << "combo size = " << bb_combo.size() << endl;
       TLorentzVector b_H_match, bbar_H_match, b_t_match, bbar_t_match, q_match, qbar_match, qq_match;
+      map<int,int> b_matchs;
       if( true and file_lhe ){
         /*
         cout << "b input data ... in " << endl;
@@ -392,7 +417,7 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
         cout << "b input data ... out " << endl;
         */
 
-        map<int,int> b_matchs = match_multiple( {b_H.tlv, bbar_H.tlv, b_t.tlv, bbar_t.tlv, q.tlv, qbar.tlv}, jets_tlvs, 0.4 );
+        b_matchs = match_multiple( {b_H.tlv, bbar_H.tlv, b_t.tlv, bbar_t.tlv, q.tlv, qbar.tlv}, jets_tlvs, 0.4 );
         // map<int,int> q_matchs = match_multiple( {q.tlv, qbar.tlv}, jets_tlvs, 0.4 );
 
         /*
@@ -523,6 +548,21 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
         hist_HY_eval->Fill( X_eval.M() , weight  );
         hist_bb_eval->Fill( H_eval.M() , weight  );
         hist_bqq_eval->Fill( tq_eval.M() , weight  );
+
+        if( tl_eval.M() > 135 ){
+        selections->Fill("tl_eval.M() < 135", weight);
+        selections_nice2->Fill("tl_eval.M() < 135", weight);
+
+        if( H_eval.M() > 95 ){
+        selections->Fill("H_eval.M() < 95", weight);
+        selections_nice2->Fill("H_eval.M() < 95", weight);
+
+        if( Y_eval.M() > 0.5*Y_true_mass ){
+        selections->Fill("Y_eval.M() < 0.5*Y_true_mass", weight);
+        selections_nice2->Fill("H_eval.M() < 0.5*Y_true_mass", weight);
+
+        hist_HY_eval_fnal->Fill( X_eval.M() , weight  );
+        }}}
       }
 
       if( true and file_lhe ){
@@ -756,8 +796,33 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
         hist_qq_all->Fill( Wq.M() , weight  );
 
         double metric = calc_metric(Wl, tl, Wq, tq, H);
-        if( best_event.metric > metric )
+        if( best_event.metric > metric ){
           best_event.set( metric, Wl, tl, Wq, tq, H, Y, X );
+          // void set_jet_indexes(int index_q1_,int index_q2_,int index_hb1_,int index_hb2_,int index_t1b_,int index_t2b_){
+          best_event.set_jet_indexes( ljets_sample[0], ljets_sample[1], b1_h_index, b2_h_index, b_tls[0], b_tqs[0] );
+        }
+      }
+
+      // b_matchs = match_multiple( {b_H.tlv, bbar_H.tlv, b_t.tlv, bbar_t.tlv, q.tlv, qbar.tlv}, jets_tlvs, 0.4 );
+      int matching_score = 0;
+      int total_matching_score = 0;
+
+      for(int iii = 0; iii < 6; iii++)
+        total_matching_score += b_matchs[iii] != -1;
+
+      matching_score       += best_event.index_q1 == b_matchs[4] + best_event.index_q1 == b_matchs[5];
+      matching_score       += best_event.index_q2 == b_matchs[4] + best_event.index_q2 == b_matchs[5];
+
+      matching_score       += best_event.index_hb1 == b_matchs[0] + best_event.index_hb1 == b_matchs[1];
+      matching_score       += best_event.index_hb2 == b_matchs[0] + best_event.index_hb2 == b_matchs[1];
+
+      matching_score       += best_event.index_t1b == b_matchs[2] + best_event.index_hb1 == b_matchs[3];
+      matching_score       += best_event.index_t2b == b_matchs[2] + best_event.index_hb2 == b_matchs[3];
+
+      if( total_matching_score != 0){
+        frac_matching_score += float(matching_score) / total_matching_score ;
+        sum_matching_score  += matching_score == total_matching_score ;
+        selected_matchin += 1;
       }
 
         hist_nul_BM->Fill( best_event.Wl.M() , weight );
@@ -776,6 +841,9 @@ void process_delphes( string file, string file_tbar, string ofile_name, string f
     
     file->Close();
   }
+
+  cout << ")frac_matching_score> " << frac_matching_score << " " << frac_matching_score / selected_matchin << endl; 
+  cout << ")total_matching_score> " << sum_matching_score << " " << sum_matching_score / selected_matchin << endl; 
 
   myfile.close();
 	for(int i = 1; i < 100; ++i) {

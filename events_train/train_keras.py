@@ -14,6 +14,7 @@ def get_dataset( X, Y, max_rows ):
 
 def pm_train():
   points = [(650, 375), (900, 600), (1300, 475), (1300, 975), (1700, 475), (1700, 1225), (1900, 475), (1900, 1600)]
+  points = [(1900, 1600)]
   for point in points:
     datasets = []
     #for X, Y in points:
@@ -70,7 +71,7 @@ def pm_train():
     model.compile(optimizer='adam', loss="binary_crossentropy", metrics=["binary_crossentropy", "accuracy", "mse"])
 
     model.fit(data_x, data_y, epochs=20)
-    model.save("model_" + str(point[0]) + "_" + str(point[1]) + ".h5", save_format='h5')
+    model.save("model_X" + str(point[0]) + "_" + str(point[1]) + ".h5", save_format='h5')
     print("\n--- --- --- --- --- --- --- --- ---\n")
 
 if __name__ == "__main__" : 
